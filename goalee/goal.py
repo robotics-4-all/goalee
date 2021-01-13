@@ -47,14 +47,15 @@ class Goal(metaclass=ABCMeta):
             state_str  = 'FAILED'
         print(f'[*] - Goal <{self._name}> entered {state_str} state')
 
-    @abstractmethod
     def enter(self):
-        pass
-
-    def on_enter(self):
         print(f'[*] - Entering Goal <{self._name}:{self.__class__.__name__}>')
+        self.on_enter()
         self.set_state(GoalState.RUNNING)
         self.run_until_exit()
+
+    @abstractmethod
+    def on_enter(self):
+        pass
 
     def run_until_exit(self):
         ts_start = time.time()
@@ -66,6 +67,11 @@ class Goal(metaclass=ABCMeta):
                 print(
                     f'[*] - Goal <{self._name}> exited due' + \
                     f' to timeout after {self._max_duration} seconds!')
+        self.on_exit()
+
+    @abstractmethod
+    def on_exit(self):
+        pass
 
     def set_comm_node(self, comm_node: Node):
         if not isinstance(comm_node, Node):
@@ -82,27 +88,3 @@ class Goal(metaclass=ABCMeta):
             str: String representation of the random unique id
         """
         return str(uuid.uuid4()).replace('-', '')
-
-
-class TopicMessageReceivedGoal(Goal):
-
-    def __init__(self,
-                 topic: str,
-                 comm_node: Node = None,
-                 name: str = None,
-                 event_emitter=None,
-                 max_duration: float = 10.0):
-        super().__init__(comm_node, event_emitter, name=name,
-                         max_duration=max_duration)
-        self._listening_topic = topic
-        self._msg = None
-
-    def enter(self):
-        self._listener = self._comm_node.create_subscriber(
-            topic=self._listening_topic, on_message=self._on_message
-        )
-        self._listener.run()
-        self.on_enter()
-
-    def _on_message(self, msg):
-        self.set_state(GoalState.COMPLETED)

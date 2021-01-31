@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from typing import Any, Optional
 from enum import IntEnum
 
 import time
@@ -19,12 +20,14 @@ class Goal(metaclass=ABCMeta):
 
     def __init__(self,
                  comm_node: Node,
-                 event_emitter=None,
-                 name: str = None,
-                 max_duration: float = 10.0):
+                 event_emitter: Optional[Any] = None,
+                 name: Optional[str] = None,
+                 max_duration: Optional[float] = None,
+                 min_duration: Optional[float] = None):
         self._comm_node = comm_node
         self._ee = event_emitter
         self._max_duration = max_duration
+        self._min_duration = min_duration
         if name is None or len(name) == 0:
             name = self._gen_random_name()
         self._name = name
@@ -62,11 +65,17 @@ class Goal(metaclass=ABCMeta):
         while self._state not in (GoalState.COMPLETED, GoalState.FAILED):
             time.sleep(0.001)
             elapsed = time.time() - ts_start
-            if elapsed > self._max_duration:
+            if self._max_duration in (None, 0):
+                continue
+            elif elapsed > self._max_duration:
                 self.set_state(GoalState.FAILED)
                 print(
                     f'[*] - Goal <{self._name}> exited due' + \
                     f' to timeout after {self._max_duration} seconds!')
+        elapsed = time.time() - ts_start
+        if self._min_duration not in  (None, 0):
+            if elapsed < self._min_duration:
+                self.set_state(GoalState.FAILED)
         self.on_exit()
 
     @abstractmethod

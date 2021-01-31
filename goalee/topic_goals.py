@@ -1,3 +1,4 @@
+from typing import Any, Optional, Callable
 from enum import IntEnum
 
 import time
@@ -12,10 +13,11 @@ class TopicMessageReceivedGoal(Goal):
 
     def __init__(self,
                  topic: str,
-                 comm_node: Node = None,
-                 name: str = None,
-                 event_emitter=None,
-                 max_duration: float = 10.0):
+                 comm_node: Optional[Node] = None,
+                 name: Optional[str] = None,
+                 event_emitter: Optional[Any] = None,
+                 max_duration: Optional[float] = None,
+                 min_duration: Optional[float] = None):
         super().__init__(comm_node, event_emitter, name=name,
                          max_duration=max_duration)
         self._listening_topic = topic
@@ -38,11 +40,12 @@ class TopicMessageParamGoal(Goal):
 
     def __init__(self,
                  topic: str,
-                 comm_node: Node = None,
-                 name: str = None,
-                 event_emitter=None,
-                 condition: callable = None,
-                 max_duration: float = 10.0):
+                 comm_node: Optional[Node] = None,
+                 name: Optional[str] = None,
+                 event_emitter: Optional[Any] = None,
+                 condition: Optional[Callable] = None,
+                 max_duration: Optional[float] = None,
+                 min_duration: Optional[float] = None):
         super().__init__(comm_node, event_emitter, name=name,
                          max_duration=max_duration)
         self._listening_topic = topic

@@ -22,7 +22,7 @@ class RectangleAreaGoal(Goal):
 
     def __init__(self,
                  topic: str,
-                 center: Point,
+                 bottomLeftEdge: Point,
                  length_x: float,
                  length_y: float,
                  tag: AreaGoalTag = AreaGoalTag.ENTER,
@@ -35,7 +35,7 @@ class RectangleAreaGoal(Goal):
                          max_duration=max_duration)
         self._topic = topic
         self._msg = None
-        self._center = center
+        self._bottomLeftEdge = bottomLeftEdge
         self._length_x = length_x
         self._length_y = length_y
         self._tag = tag
@@ -47,7 +47,7 @@ class RectangleAreaGoal(Goal):
     def on_enter(self):
         print(f'[*] - Starting RectangleAreaGoal <{self._name}> with params:')
         print(f'-> topic: {self._topic}')
-        print(f'-> center: {self._center}')
+        print(f'-> bottomLeftEdge: {self._bottomLeftEdge}')
         print(f'-> length_x: {self._length_x}')
         print(f'-> length_y: {self._length_y}')
         self._listener = self._comm_node.create_subscriber(
@@ -60,10 +60,10 @@ class RectangleAreaGoal(Goal):
 
     def _on_message(self, msg):
         pos = msg['position']
-        x_axis = (pos['x'] < (self._center.x + self._length_x)
-                  and pos['x'] > self._center.x)
-        y_axis = (pos['y'] < (self._center.y + self._length_y)
-                  and pos['y'] > self._center.y)
+        x_axis = (pos['x'] < (self._bottomLeftEdge.x + self._length_x)
+                  and pos['x'] > self._bottomLeftEdge.x)
+        y_axis = (pos['y'] < (self._bottomLeftEdge.y + self._length_y)
+                  and pos['y'] > self._bottomLeftEdge.y)
         reached = x_axis and y_axis
         if reached and self.tag == AreaGoalTag.ENTER:
             self.set_state(GoalState.COMPLETED)

@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from enum import IntEnum
 import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from commlib.node import Node, TransportType
-
 from goalee.goal import Goal
 
 
@@ -133,3 +133,15 @@ class Target:
     def run_seq(self):
         for g in self._goals:
             g.enter()
+        print(f'[*] - Finished Target in Ordered/Sequential Mode ({self._name})')
+
+    def run_concurrent(self):
+        n_threads = len(self._goals)
+        features = []
+        executor = ThreadPoolExecutor(n_threads)
+        for goal in self._goals:
+            feature = executor.submit(goal.enter, )
+            features.append(feature)
+        for f in as_completed(features):
+            pass
+        print(f'[*] - Finished Target in Concurrent Mode ({self._name})')

@@ -16,7 +16,6 @@ class GoalState(IntEnum):
 
 
 class Goal(metaclass=ABCMeta):
-    state = GoalState.IDLE
 
     def __init__(self,
                  comm_node: Node,
@@ -28,10 +27,14 @@ class Goal(metaclass=ABCMeta):
         self._ee = event_emitter
         self._max_duration = max_duration
         self._min_duration = min_duration
-        if name is None or len(name) == 0:
+        if name is None:
             name = self._gen_random_name()
         self._name = name
         self.set_state(GoalState.IDLE)
+
+    @property
+    def state(self):
+        return self._state
 
     def set_state(self, state: GoalState):
         if state not in GoalState:
@@ -55,6 +58,7 @@ class Goal(metaclass=ABCMeta):
         self.on_enter()
         self.set_state(GoalState.RUNNING)
         self.run_until_exit()
+        return self.state
 
     @abstractmethod
     def on_enter(self):

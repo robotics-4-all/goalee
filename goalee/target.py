@@ -133,7 +133,8 @@ class Target:
     def run_seq(self):
         for g in self._goals:
             g.enter()
-        print(f'[*] - Finished Target in Ordered/Sequential Mode ({self._name})')
+        print(
+            f'[*] - Finished Target in Ordered/Sequential Mode ({self._name})')
 
     def run_concurrent(self):
         n_threads = len(self._goals)

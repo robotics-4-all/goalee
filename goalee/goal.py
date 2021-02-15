@@ -51,7 +51,8 @@ class Goal(metaclass=ABCMeta):
             state_str  = 'COMPLETED'
         elif self._state == GoalState.FAILED:
             state_str  = 'FAILED'
-        print(f'[*] - Goal <{self._name}> entered {state_str} state')
+        print(f'[*] - Goal <{self._name}> entered {state_str} state ' +
+              f'(maxT={self._max_duration}, minT={self._min_duration})')
 
     def enter(self):
         print(f'[*] - Entering Goal <{self._name}:{self.__class__.__name__}>')

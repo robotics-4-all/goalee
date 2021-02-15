@@ -3,15 +3,16 @@
 import sys
 import time
 
-from commlib.msg import PubSubMessage, MessageHeader, DataClass, DataField
+from commlib.msg import PubSubMessage, MessageHeader, DataClass
 from commlib.node import Node, TransportType
 
 
 @DataClass
-class PoseMessage(PubSubMessage):
+class SonarMessage(PubSubMessage):
     header: MessageHeader = MessageHeader()
-    position: dict = DataField(
-        default_factory=lambda: {'x': 0.0, 'y': 0.0, 'z': 0.0})
+    range: float = -1
+    hfov: float = 30.6
+    vfov: float = 14.2
 
 
 if __name__ == '__main__':
@@ -33,19 +34,17 @@ if __name__ == '__main__':
         sys.exit(1)
     conn_params = ConnectionParameters()
 
-    node = Node(node_name='',
+    node = Node(node_name='sensors.sonar.front',
                 transport_type=transport,
                 transport_connection_params=conn_params,
                 # heartbeat_uri='nodes.add_two_ints.heartbeat',
-                debug=False)
+                debug=True)
 
-    pub = node.create_publisher(msg_type=PoseMessage,
-                                topic='robot.pose')
+    pub = node.create_publisher(msg_type=SonarMessage,
+                                topic='sensors.sonar.front')
 
-    msg = PoseMessage()
+    msg = SonarMessage()
     while True:
-        print(msg)
         pub.publish(msg)
-        msg.position['x'] += 1
-        msg.position['y'] += 1
-        time.sleep(1)
+        msg.range += 1
+        time.sleep(3)

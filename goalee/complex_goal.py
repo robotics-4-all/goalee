@@ -69,7 +69,9 @@ class ComplexGoal(Goal):
             results = [future.result() for future in as_completed(features)]
         except TimeoutError as e:
             pass
+        executor.shutdown(wait=False, cancel_futures=True)
         self.calc_result()
+
 
     def calc_result(self):
         res_list = []
@@ -110,7 +112,6 @@ class ComplexGoal(Goal):
         """add_goal
         Append goal.
         """
-        print(self._max_duration)
         if goal._max_duration is None:
             goal._max_duration = self._max_duration
         elif goal._max_duration > self._max_duration:
@@ -119,7 +120,6 @@ class ComplexGoal(Goal):
             goal._min_duration = self._min_duration
         elif goal._min_duration > self._min_duration:
             goal._min_duration = self._min_duration
-        print(goal._max_duration)
         self._goals.append(goal)
 
     def set_comm_node(self, comm_node: Node):

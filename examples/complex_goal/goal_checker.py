@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
     g1 = TopicMessageReceivedGoal(topic='sensors.sonar.front')
     g2 = TopicMessageParamGoal(topic='sensors.sonar.front',
-                               condition=lambda msg: True if msg['range'] > 5 \
+                               condition=lambda msg: True if msg['range'] > 2 \
                                else False)
     cg = ComplexGoal(max_duration=10, min_duration=0)
     # Add goals in complex goal

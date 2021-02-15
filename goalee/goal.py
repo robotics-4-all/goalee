@@ -56,8 +56,8 @@ class Goal(metaclass=ABCMeta):
 
     def enter(self):
         print(f'[*] - Entering Goal <{self._name}:{self.__class__.__name__}>')
-        self.on_enter()
         self.set_state(GoalState.RUNNING)
+        self.on_enter()
         self.run_until_exit()
         return self.state
 

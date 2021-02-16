@@ -134,7 +134,9 @@ class Target:
         for g in self._goals:
             g.enter()
         print(
-            f'[*] - Finished Target in Ordered/Sequential Mode ({self._name})')
+            f'Finished Target <{self._name}> in Ordered/Sequential Mode')
+        res = self.calc_result()
+        print(f'Target <{self._name}> Result: {res}')
 
     def run_concurrent(self):
         n_threads = len(self._goals)
@@ -145,4 +147,9 @@ class Target:
             features.append(feature)
         for f in as_completed(features):
             pass
-        print(f'[*] - Finished Target in Concurrent Mode ({self._name})')
+        print(f'Finished Target <{self._name}> in Concurrent Mode')
+
+    def calc_result(self):
+        res_list = [goal.status for goal in self._goals]
+        return res_list
+

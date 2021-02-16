@@ -45,7 +45,8 @@ class ComplexGoal(Goal):
             self.run_seq()
         else:
             self.run_concurrent()
-        print(f'[*] - Finished Complex Goal in {self._algorithm} Mode ({self._name})')
+        print(f'Finished Complex Goal in {self._algorithm} Mode ({self._name})')
+        self.calc_result()
 
     def run_seq(self):
         ## TODO: Timeout due to maxtime
@@ -70,8 +71,6 @@ class ComplexGoal(Goal):
         except TimeoutError as e:
             pass
         executor.shutdown(wait=False, cancel_futures=True)
-        self.calc_result()
-
 
     def calc_result(self):
         res_list = []
@@ -80,7 +79,7 @@ class ComplexGoal(Goal):
                 res_list.append(1)
             else:
                 res_list.append(0)
-        print(f'RESULT LIST: {res_list}')
+        print(f'Complex Goal <{self._name}> Result List: {res_list}')
         completed = res_list.count(1)
         failed = res_list.count(0)
 
@@ -100,6 +99,17 @@ class ComplexGoal(Goal):
             else:
                 self.set_state(GoalState.FAILED)
         elif self._algorithm == ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED:
+            if completed == self._x_accomplished:
+                self.set_state(GoalState.COMPLETED)
+            else:
+                self.set_state(GoalState.FAILED)
+        elif self._algorithm == ComplexGoalAlgorithm.ALL_ACCOMPLISHED_ORDERED:
+            if completed == len(res_list):
+                self.set_state(GoalState.COMPLETED)
+            else:
+                self.set_state(GoalState.FAILED)
+        elif self._algorithm == \
+            ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED_ORDERED:
             if completed == self._x_accomplished:
                 self.set_state(GoalState.COMPLETED)
             else:

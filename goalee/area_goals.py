@@ -45,7 +45,7 @@ class RectangleAreaGoal(Goal):
         return self._tag
 
     def on_enter(self):
-        print(f'[*] - Starting RectangleAreaGoal <{self._name}> with params:')
+        print(f'Starting RectangleAreaGoal <{self._name}> with params:')
         print(f'-> topic: {self._topic}')
         print(f'-> bottomLeftEdge: {self._bottomLeftEdge}')
         print(f'-> length_x: {self._length_x}')
@@ -94,7 +94,7 @@ class CircularAreaGoal(Goal):
         return self._tag
 
     def on_enter(self):
-        print(f'[*] - Starting CircularAreaGoal <{self._name}> with params:')
+        print(f'Starting CircularAreaGoal <{self._name}> with params:')
         print(f'-> topic: {self._topic}')
         print(f'-> center: {self._center}')
         print(f'-> radius: {self._radius}')

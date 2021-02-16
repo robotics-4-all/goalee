@@ -23,6 +23,7 @@ class Goal(metaclass=ABCMeta):
                  name: Optional[str] = None,
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
+        self._status = 0
         self._comm_node = comm_node
         self._ee = event_emitter
         self._max_duration = max_duration
@@ -31,6 +32,10 @@ class Goal(metaclass=ABCMeta):
             name = self._gen_random_name()
         self._name = name
         self.set_state(GoalState.IDLE)
+
+    @property
+    def status(self):
+        return self._status
 
     @property
     def state(self):
@@ -51,14 +56,18 @@ class Goal(metaclass=ABCMeta):
             state_str  = 'COMPLETED'
         elif self._state == GoalState.FAILED:
             state_str  = 'FAILED'
-        print(f'[*] - Goal <{self._name}> entered {state_str} state ' +
+        print(f'Goal <{self._name}> entered {state_str} state ' +
               f'(maxT={self._max_duration}, minT={self._min_duration})')
 
     def enter(self):
-        print(f'[*] - Entering Goal <{self._name}:{self.__class__.__name__}>')
+        print(f'Entering Goal <{self._name}:{self.__class__.__name__}>')
         self.set_state(GoalState.RUNNING)
         self.on_enter()
         self.run_until_exit()
+        status = 1 if self.state == GoalState.COMPLETED else 0
+        print(f'Goal <{self._name}:{self.__class__.__name__}>' + \
+              f' exited with status: {self.state}')
+        self._status = status
         return self.state
 
     @abstractmethod
@@ -75,7 +84,7 @@ class Goal(metaclass=ABCMeta):
             elif elapsed > self._max_duration:
                 self.set_state(GoalState.FAILED)
                 print(
-                    f'[*] - Goal <{self._name}> exited due' + \
+                    f'Goal <{self._name}> exited due' + \
                     f' to timeout after {self._max_duration} seconds!')
         elapsed = time.time() - ts_start
         if self._min_duration not in  (None, 0):

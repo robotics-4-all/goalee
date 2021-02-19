@@ -9,10 +9,15 @@ if __name__ == '__main__':
     middleware = RedisMiddleware()
     t = Target(middleware)
 
-    g1 = RectangleAreaGoal('robot.pose', Point(10.0, 10.0), 5.0, 5.0,
+    g1 = RectangleAreaGoal(topic='robot.pose',
+                           bottom_left_edge=Point(0.0, 0.0),
+                           length_x=5.0,
+                           length_y=5.0,
                            max_duration=10.0)
-    g2 = CircularAreaGoal('robot.pose', Point(20.0, 20.0), 5.0,
+    g2 = CircularAreaGoal(topic='robot.pose',
+                          center=Point(10.0, 10.0),
+                          radius=5.0,
                           max_duration=10.0)
     t.add_goal(g1)
     t.add_goal(g2)
-    t.run_seq()
+    t.run_concurrent()

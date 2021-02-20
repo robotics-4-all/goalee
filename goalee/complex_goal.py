@@ -122,11 +122,16 @@ class ComplexGoal(Goal):
         """add_goal
         Append goal.
         """
-        if goal._max_duration is None:
+        if self._max_duration is None:
+            pass
+        elif goal._max_duration is None:
             goal._max_duration = self._max_duration
         elif goal._max_duration > self._max_duration:
             goal._max_duration = self._max_duration
-        if goal._min_duration is None:
+
+        if self._min_duration is None:
+            pass
+        elif goal._min_duration is None:
             goal._min_duration = self._min_duration
         elif goal._min_duration > self._min_duration:
             goal._min_duration = self._min_duration

@@ -139,7 +139,8 @@ class Target:
         print(
             f'Finished Target <{self._name}> in Ordered/Sequential Mode')
         score = self.calc_score()
-        print(f'SCORE for Target <{self._name}>: {score}')
+        print(f'Results for Target <{self._name}>: {self.make_result_list()}')
+        print(f'Score for Target <{self._name}>: {score}')
 
     def run_concurrent(self):
         n_threads = len(self._goals)
@@ -164,6 +165,5 @@ class Target:
             self._score_weights = [1/len(self._goals)] * len(self._goals)
         res = [goal.status * w for goal,w in zip(self._goals,
                                                  self._score_weights)]
-        print(res)
         res = sum(res)
         return res

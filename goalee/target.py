@@ -152,10 +152,11 @@ class Target:
             pass
         print(f'Finished Target <{self._name}> in Concurrent Mode')
         score = self.calc_score()
-        print(f'SCORE for Target <{self._name}>: {score}')
+        print(f'Results for Target <{self._name}>: {self.make_result_list()}')
+        print(f'Score for Target <{self._name}>: {score}')
 
-    def calc_result(self):
-        res_list = [goal.status for goal in self._goals]
+    def make_result_list(self):
+        res_list = [(goal.name, goal.status) for goal in self._goals]
         return res_list
 
     def calc_score(self):

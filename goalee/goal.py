@@ -34,6 +34,10 @@ class Goal(metaclass=ABCMeta):
         self.set_state(GoalState.IDLE)
 
     @property
+    def name(self):
+        return self._name
+
+    @property
     def status(self):
         return self._status
 

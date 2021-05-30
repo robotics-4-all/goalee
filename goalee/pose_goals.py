@@ -112,7 +112,7 @@ class OrientationGoal(Goal):
         self._deviation = deviation
 
     def on_enter(self):
-        print(f'Starting PoseGoal <{self._name}> with params:')
+        print(f'Starting OrientationGoal <{self._name}> with params:')
         print(f'-> topic: {self._topic}')
         self._listener = self._comm_node.create_subscriber(
             topic=self._topic, on_message=self._on_message

@@ -1,5 +1,5 @@
+import math
 from typing import Any, Dict, List, Optional
-
 from dataclasses import dataclass
 
 
@@ -35,6 +35,9 @@ class Point:
             raise ValueError(
                 f'Cannot perform addition of Point with type {type(other)}')
 
+    def abs(self):
+        return math.sqrt(self.x**2 + self.y**2 + self.z**2)
+
 
 @dataclass
 class Orientation:
@@ -67,3 +70,9 @@ class Orientation:
         else:
             raise ValueError(
                 f'Cannot perform addition of Point with type {type(other)}')
+
+
+@dataclass
+class Pose:
+    translation: Point
+    orientation: Orientation

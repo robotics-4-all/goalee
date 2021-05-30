@@ -20,7 +20,7 @@ class TopicMessageReceivedGoal(Goal):
                  min_duration: Optional[float] = None):
         super().__init__(comm_node, event_emitter, name=name,
                          max_duration=max_duration,
-                         min_duration)
+                         min_duration=min_duration)
         self._listening_topic = topic
         self._msg = None
 

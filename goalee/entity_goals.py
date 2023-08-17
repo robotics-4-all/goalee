@@ -9,7 +9,7 @@ from commlib.node import Node
 from goalee.goal import Goal, GoalState
 
 
-class TopicMessageReceivedGoal(Goal):
+class EntityStateChange(Goal):
 
     def __init__(self,
                  topic: str,
@@ -37,7 +37,7 @@ class TopicMessageReceivedGoal(Goal):
         self.set_state(GoalState.COMPLETED)
 
 
-class TopicMessageParamGoal(Goal):
+class EntityStateCondition(Goal):
 
     def __init__(self,
                  topic: str,

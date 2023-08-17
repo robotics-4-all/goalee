@@ -4,26 +4,19 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, List, Optional
 
-from commlib.node import Node, TransportType
+from commlib.node import Node
 from goalee.goal import Goal
+from pydantic import BaseModel
 
 
-class MiddlewareType:
-    AMQP = 0
-    MQTT = 1
-    REDIS = 2
+class Broker(BaseModel):
+    host: str = ""
+    port: int = 0
+    username: str = ""
+    password: str = ""
 
 
-class Middleware(metaclass=ABCMeta):
-    host: str = None
-    port: int = None
-    username: str = None
-    password: str = None
-
-
-class AMQPMiddleware(Middleware):
-    vhost: str = None
-
+class AMQPBroker(BaseModel):
     def __init__(self,
                  host: str = 'localhost',
                  port: int = 5672,
@@ -37,9 +30,7 @@ class AMQPMiddleware(Middleware):
         self.password = password
 
 
-class RedisMiddleware(Middleware):
-    db: str = None
-
+class RedisBroker(BaseModel):
     def __init__(self,
                  host: str = 'localhost',
                  port: int = 6379,
@@ -53,7 +44,7 @@ class RedisMiddleware(Middleware):
         self.password = password
 
 
-class MQTTMiddleware(Middleware):
+class MQTTBroker(BaseModel):
     def __init__(self,
                  host: str = 'localhost',
                  port: int = 1883,
@@ -65,18 +56,17 @@ class MQTTMiddleware(Middleware):
         self.password = password
 
 
-class Target:
+class Scenario:
     def __init__(self,
-                 input_middleware: Middleware,
-                 output_middleware: Middleware = None,
-                 name: str = None,
+                 input_broker: Broker,
+                 name: str = "",
                  score_weights: Optional[List] = None):
-        self._input_middleware = input_middleware
-        if name is None or len(name) == 0:
+        self._input_broker = input_broker
+        if name in (None, "") or len(name) == 0:
             name = self.gen_random_name()
         self._name = name
         self._score_weights = score_weights
-        self._input_node = self._create_comm_node(self._input_middleware)
+        self._input_node = self._create_comm_node(self._input_broker)
         self._goals = []
 
     def gen_random_name(self) -> str:
@@ -90,43 +80,36 @@ class Target:
         """
         return str(uuid.uuid4()).replace('-', '')
 
-    def _create_comm_node(self, middleware):
-        if middleware.__class__.__name__ == 'RedisMiddleware':
-            from commlib.transports.redis import (ConnectionParameters,
-                                                  Credentials)
+    def _create_comm_node(self, broker):
+        if broker.__class__.__name__ == 'RedisBroker':
+            from commlib.transports.redis import ConnectionParameters
             conn_params = ConnectionParameters(
-                host=middleware.host,
-                port=middleware.port,
-                db=middleware.db,
-                creds=Credentials(middleware.username,
-                                  middleware.password)
+                host=broker.host,
+                port=broker.port,
+                db=broker.db,
+                username=broker.username,
+                password=broker.password
             )
-            transport = TransportType.REDIS
-        elif middleware.__class__.__name__ == 'AMQPMiddleware':
-            from commlib.transports.amqp import (ConnectionParameters,
-                                                 Credentials)
+        elif broker.__class__.__name__ == 'AMQPBroker':
+            from commlib.transports.amqp import ConnectionParameters
             conn_params = ConnectionParameters(
-                host=middleware.host,
-                port=middleware.port,
-                vhost=middleware.vhost,
-                creds=Credentials(middleware.username,
-                                  middleware.password)
+                host=broker.host,
+                port=broker.port,
+                vhost=broker.vhost,
+                username=broker.username,
+                password=broker.password
             )
-            transport = TransportType.AMQP
-        elif middleware.__class__.__name__ == 'MQTTMiddleware':
-            from commlib.transports.redis import (ConnectionParameters,
-                                                  Credentials)
+        elif broker.__class__.__name__ == 'MQTTBroker':
+            from commlib.transports.redis import ConnectionParameters
             conn_params = ConnectionParameters(
-                host=middleware.host,
-                port=middleware.port,
-                creds=Credentials(middleware.username,
-                                  middleware.password)
+                host=broker.host,
+                port=broker.port,
+                username=broker.username,
+                password=broker.password
             )
-            transport = TransportType.MQTT
         node = Node(node_name=self._name,
-                    transport_type=transport,
                     transport_connection_params=conn_params,
-                    debug=True)
+                    debug=False)
         return node
 
     def add_goal(self, goal: Goal):
@@ -137,10 +120,10 @@ class Target:
         for g in self._goals:
             g.enter()
         print(
-            f'Finished Target <{self._name}> in Ordered/Sequential Mode')
+            f'Finished Scenario <{self._name}> in Ordered/Sequential Mode')
         score = self.calc_score()
-        print(f'Results for Target <{self._name}>: {self.make_result_list()}')
-        print(f'Score for Target <{self._name}>: {score}')
+        print(f'Results for Scenario <{self._name}>: {self.make_result_list()}')
+        print(f'Score for Scenario <{self._name}>: {score}')
 
     def run_concurrent(self):
         n_threads = len(self._goals)
@@ -151,10 +134,10 @@ class Target:
             features.append(feature)
         for f in as_completed(features):
             pass
-        print(f'Finished Target <{self._name}> in Concurrent Mode')
+        print(f'Finished Scenario <{self._name}> in Concurrent Mode')
         score = self.calc_score()
-        print(f'Results for Target <{self._name}>: {self.make_result_list()}')
-        print(f'Score for Target <{self._name}>: {score}')
+        print(f'Results for Scenario <{self._name}>: {self.make_result_list()}')
+        print(f'Score for Scenario <{self._name}>: {score}')
 
     def make_result_list(self):
         res_list = [(goal.name, goal.status) for goal in self._goals]

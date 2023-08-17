@@ -4,6 +4,6 @@ __author__ = """Konstantinos Panayiotou"""
 __email__ = 'klpanagi@gmail.com'
 __version__ = '0.1.0'
 
-from goalee.target import (
-    Target, Middleware, MQTTMiddleware, RedisMiddleware, AMQPMiddleware
+from goalee.scenario import (
+    Scenario, Broker, MQTTBroker, RedisBroker, AMQPBroker
 )

@@ -51,6 +51,7 @@ class EntityStateCondition(Goal):
                          max_duration=max_duration,
                          min_duration=min_duration)
         self.entities = entities
+        self._entities = {e.name: e for e in entities}
         self._msg = None
         self._condition = condition
 
@@ -61,5 +62,8 @@ class EntityStateCondition(Goal):
         pass
 
     def tick(self):
-        if self._condition(msg):
-            self.set_state(GoalState.COMPLETED)
+        try:
+            if self._condition(self._entities):
+                self.set_state(GoalState.COMPLETED)
+        except TypeError:
+            pass

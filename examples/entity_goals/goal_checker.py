@@ -22,13 +22,14 @@ if __name__ == '__main__':
 
     t = Scenario("Scenario_1", broker)
 
-    g1 = EntityStateChange(entity=sonar,
-                           max_duration=10.0)
-    # g2 = EntityStateCondition(topic='sensors.sonar.front',
-    #                           max_duration=10.0,
-    #                           condition=lambda msg: True if msg['range'] > 5 \
-    #                           else False)
-    t.add_goal(g1)
-    # t.add_goal(g2)
+    # g1 = EntityStateChange(entity=sonar,
+    #                        max_duration=10.0)
+    g2 = EntityStateCondition(entities=[sonar],
+                              max_duration=10.0,
+                              condition=lambda entities: True if
+                                  entities['front_sonar'].attributes['range'] > 5 \
+                              else False)
+    # t.add_goal(g1)
+    t.add_goal(g2)
 
     t.run_seq()

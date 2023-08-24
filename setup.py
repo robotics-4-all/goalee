@@ -1,48 +1,37 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import sys
+import os
+from setuptools import setup
 
-"""The setup script."""
+this_dir = os.path.abspath(os.path.dirname(__file__))
 
-from setuptools import setup, find_packages
+VERSIONFILE = os.path.join(this_dir, "goalee", "__init__.py")
+VERSION = None
+for line in open(VERSIONFILE, "r").readlines():
+    if line.startswith('__version__'):
+        VERSION = line.split('"')[1]
 
-with open('README.rst') as readme_file:
-    readme = readme_file.read()
+if not VERSION:
+    raise RuntimeError('No version defined in goalee.__init__.py')
 
-with open('HISTORY.rst') as history_file:
-    history = history_file.read()
 
-requirements = [ ]
+if sys.argv[-1].startswith('publish'):
+    if os.system("pip list | grep wheel"):
+        print("wheel not installed.\nUse `pip install wheel`.\nExiting.")
+        sys.exit()
+    if os.system("pip list | grep twine"):
+        print("twine not installed.\nUse `pip install twine`.\nExiting.")
+        sys.exit()
+    os.system("python setup.py sdist bdist_wheel")
+    if sys.argv[-1] == 'publishtest':
+        os.system("twine upload -r test dist/*")
+    else:
+        os.system("twine upload dist/*")
+        print("You probably want to also tag the version now:")
+        print("  git tag -a {0} -m 'version {0}'".format(VERSION))
+        print("  git push --tags")
+    sys.exit()
 
-setup_requirements = [ ]
 
-test_requirements = [ ]
-
-setup(
-    author="Konstantinos Panayiotou",
-    author_email='klpanagi@gmail.com',
-    python_requires='>=3.5',
-    classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Natural Language :: English',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-    ],
-    description="Library for building validation rules (Goals) for asynchronous distributed applications in the context of Internet of Things and Cyber-Physical Sysstems",
-    install_requires=requirements,
-    license="MIT license",
-    long_description=readme + '\n\n' + history,
-    include_package_data=True,
-    keywords='goalee',
-    name='goalee',
-    packages=find_packages(include=['goalee', 'goalee.*']),
-    setup_requires=setup_requirements,
-    test_suite='tests',
-    tests_require=test_requirements,
-    url='https://github.com/klpanagi/goalee',
-    version='0.1.0',
-    zip_safe=False,
-)
+setup(version=VERSION)

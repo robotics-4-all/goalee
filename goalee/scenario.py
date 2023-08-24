@@ -75,7 +75,6 @@ class Scenario:
     def create_entities(self):
         for goal in self._goals:
             for entity in goal.entities:
-                print(entity.name)
                 entity.start()
 
     def run_seq(self):

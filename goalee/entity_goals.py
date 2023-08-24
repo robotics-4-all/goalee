@@ -14,7 +14,7 @@ class EntityStateChange(Goal):
 
     def __init__(self,
                  entity: Entity,
-                 name: str = "",
+                 name: Optional[str] = None,
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
@@ -52,7 +52,6 @@ class EntityStateCondition(Goal):
                          min_duration=min_duration)
         self.entities = entities
         self._entities = {e.name: e for e in entities}
-        self._msg = None
         self._condition = condition
 
     def on_enter(self):

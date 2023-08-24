@@ -25,7 +25,7 @@ class Goal(metaclass=ABCMeta):
         self._ee = event_emitter
         self._max_duration = max_duration
         self._min_duration = min_duration
-        if name is None:
+        if name in (None, ""):
             name = self._gen_random_name()
         self._name = name
         self._freq = tick_freq

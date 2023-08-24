@@ -1,4 +1,4 @@
-from typing import Any, Optional, Callable
+from typing import Any, Optional, Callable, List
 from enum import IntEnum
 
 import time
@@ -7,62 +7,59 @@ import uuid
 from commlib.node import Node
 
 from goalee.goal import Goal, GoalState
+from goalee.entity import Entity
 
 
 class EntityStateChange(Goal):
 
     def __init__(self,
-                 topic: str,
-                 comm_node: Optional[Node] = None,
-                 name: Optional[str] = None,
+                 entity: Entity,
+                 name: str = "",
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
-        super().__init__(comm_node, event_emitter, name=name,
+        super().__init__(event_emitter,
+                         name=name,
                          max_duration=max_duration,
                          min_duration=min_duration)
-        self._listening_topic = topic
-        self._msg = None
+        self.entities = [entity]
+        self._last_state = self.entities[0].attributes.copy()
 
     def on_enter(self):
-        self._listener = self._comm_node.create_subscriber(
-            topic=self._listening_topic, on_message=self._on_message
-        )
-        self._listener.run()
+        pass
 
     def on_exit(self):
-        self._listener.stop()
+        pass
 
-    def _on_message(self, msg):
-        self.set_state(GoalState.COMPLETED)
+    def tick(self):
+        if self._last_state != self.entities[0].attributes:
+            self.set_state(GoalState.COMPLETED)
+        self._last_state = self.entities[0].attributes.copy()
 
 
 class EntityStateCondition(Goal):
 
     def __init__(self,
-                 topic: str,
-                 comm_node: Optional[Node] = None,
+                 entities: List[Entity],
                  name: Optional[str] = None,
                  event_emitter: Optional[Any] = None,
                  condition: Optional[Callable] = None,
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
-        super().__init__(comm_node, event_emitter, name=name,
+        super().__init__(event_emitter,
+                         name=name,
                          max_duration=max_duration,
                          min_duration=min_duration)
-        self._listening_topic = topic
+        self.entities = entities
         self._msg = None
         self._condition = condition
 
     def on_enter(self):
-        self._listener = self._comm_node.create_subscriber(
-            topic=self._listening_topic, on_message=self._on_message
-        )
-        self._listener.run()
+        pass
 
     def on_exit(self):
-        self._listener.stop()
+        pass
 
-    def _on_message(self, msg):
+    def tick(self):
         if self._condition(msg):
             self.set_state(GoalState.COMPLETED)

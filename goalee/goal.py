@@ -5,8 +5,6 @@ from enum import IntEnum
 import time
 import uuid
 
-from commlib.node import Node
-
 
 class GoalState(IntEnum):
     IDLE = 0
@@ -18,19 +16,19 @@ class GoalState(IntEnum):
 class Goal(metaclass=ABCMeta):
 
     def __init__(self,
-                 comm_node: Node,
                  event_emitter: Optional[Any] = None,
                  name: Optional[str] = None,
+                 tick_freq: Optional[int] = 10,  # hz
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
         self._status = 0
-        self._comm_node = comm_node
         self._ee = event_emitter
         self._max_duration = max_duration
         self._min_duration = min_duration
         if name is None:
             name = self._gen_random_name()
         self._name = name
+        self._freq = tick_freq
         self.set_state(GoalState.IDLE)
 
     @property
@@ -78,10 +76,14 @@ class Goal(metaclass=ABCMeta):
     def on_enter(self):
         pass
 
+    @abstractmethod
+    def tick(self):
+        pass
+
     def run_until_exit(self):
         ts_start = time.time()
         while self._state not in (GoalState.COMPLETED, GoalState.FAILED):
-            time.sleep(0.001)
+            self.tick()
             elapsed = time.time() - ts_start
             if self._max_duration in (None, 0):
                 continue
@@ -90,6 +92,7 @@ class Goal(metaclass=ABCMeta):
                 print(
                     f'Goal <{self._name}> exited due' + \
                     f' to timeout after {self._max_duration} seconds!')
+            time.sleep(1 / self._freq)
         elapsed = time.time() - ts_start
         if self._min_duration not in  (None, 0):
             if elapsed < self._min_duration:
@@ -99,11 +102,6 @@ class Goal(metaclass=ABCMeta):
     @abstractmethod
     def on_exit(self):
         pass
-
-    def set_comm_node(self, comm_node: Node):
-        if not isinstance(comm_node, Node):
-            raise ValueError('')
-        self._comm_node = comm_node
 
     def _gen_random_name(self) -> str:
         """gen_random_id.

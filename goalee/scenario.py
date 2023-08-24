@@ -11,16 +11,20 @@ from goalee.brokers import Broker, AMQPBroker, MQTTBroker, RedisBroker
 
 class Scenario:
     def __init__(self,
-                 input_broker: Broker,
                  name: str = "",
+                 broker: Optional[Broker] = None,
                  score_weights: Optional[List] = None):
-        self._input_broker = input_broker
+        self._broker = broker
         if name in (None, "") or len(name) == 0:
             name = self.gen_random_name()
         self._name = name
         self._score_weights = score_weights
-        self._input_node = self._create_comm_node(self._input_broker)
+        if self._broker is not None:
+            self._input_node = self._create_comm_node(self._broker)
+        else:
+            self._input_node = None
         self._goals = []
+        self._entities = []
 
     def gen_random_name(self) -> str:
         """gen_random_id.
@@ -66,10 +70,17 @@ class Scenario:
         return node
 
     def add_goal(self, goal: Goal):
-        goal.set_comm_node(self._input_node)
         self._goals.append(goal)
 
+    def create_entities(self):
+        for goal in self._goals:
+            for entity in goal.entities:
+                print(entity.name)
+                entity.start()
+
     def run_seq(self):
+        self.create_entities()
+        # return
         for g in self._goals:
             g.enter()
         print(
@@ -79,6 +90,8 @@ class Scenario:
         print(f'Score for Scenario <{self._name}>: {score}')
 
     def run_concurrent(self):
+        self.create_entities()
+        return
         n_threads = len(self._goals)
         features = []
         executor = ThreadPoolExecutor(n_threads)

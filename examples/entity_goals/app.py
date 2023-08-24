@@ -3,11 +3,10 @@
 import sys
 import time
 
-from commlib.msg import PubSubMessage, MessageHeader, DataClass
+from commlib.msg import PubSubMessage, MessageHeader
 from commlib.node import Node, TransportType
 
 
-@DataClass
 class SonarMessage(PubSubMessage):
     header: MessageHeader = MessageHeader()
     range: float = -1
@@ -17,26 +16,22 @@ class SonarMessage(PubSubMessage):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        broker = 'redis'
+        broker = 'mqtt'
     else:
         broker = str(sys.argv[1])
     if broker == 'redis':
         from commlib.transports.redis import ConnectionParameters
-        transport = TransportType.REDIS
     elif broker == 'amqp':
         from commlib.transports.amqp import ConnectionParameters
-        transport = TransportType.AMQP
     elif broker == 'mqtt':
         from commlib.transports.mqtt import ConnectionParameters
-        transport = TransportType.MQTT
     else:
         print('Not a valid broker-type was given!')
         sys.exit(1)
     conn_params = ConnectionParameters()
 
     node = Node(node_name='sensors.sonar.front',
-                transport_type=transport,
-                transport_connection_params=conn_params,
+                connection_params=conn_params,
                 # heartbeat_uri='nodes.add_two_ints.heartbeat',
                 debug=True)
 
@@ -45,6 +40,7 @@ if __name__ == '__main__':
 
     msg = SonarMessage()
     while True:
+        print(f'Sending Message: {msg}')
         pub.publish(msg)
         msg.range += 1
-        time.sleep(3)
+        time.sleep(1)

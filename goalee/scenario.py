@@ -6,54 +6,7 @@ from typing import Any, List, Optional
 
 from commlib.node import Node
 from goalee.goal import Goal
-from pydantic import BaseModel
-
-
-class Broker(BaseModel):
-    host: str = ""
-    port: int = 0
-    username: str = ""
-    password: str = ""
-
-
-class AMQPBroker(BaseModel):
-    def __init__(self,
-                 host: str = 'localhost',
-                 port: int = 5672,
-                 vhost: str = '/',
-                 username: str = 'guest',
-                 password: str = 'guest'):
-        self.host = host
-        self.port = port
-        self.vhost = vhost
-        self.username = username
-        self.password = password
-
-
-class RedisBroker(BaseModel):
-    def __init__(self,
-                 host: str = 'localhost',
-                 port: int = 6379,
-                 db: int = 0,
-                 username: str = '',
-                 password: str = ''):
-        self.host = host
-        self.port = port
-        self.db = db
-        self.username = username
-        self.password = password
-
-
-class MQTTBroker(BaseModel):
-    def __init__(self,
-                 host: str = 'localhost',
-                 port: int = 1883,
-                 username: str = '',
-                 password: str = ''):
-        self.host = host
-        self.port = port
-        self.username = username
-        self.password = password
+from goalee.brokers import Broker, AMQPBroker, MQTTBroker, RedisBroker
 
 
 class Scenario:
@@ -100,7 +53,7 @@ class Scenario:
                 password=broker.password
             )
         elif broker.__class__.__name__ == 'MQTTBroker':
-            from commlib.transports.redis import ConnectionParameters
+            from commlib.transports.mqtt import ConnectionParameters
             conn_params = ConnectionParameters(
                 host=broker.host,
                 port=broker.port,
@@ -108,7 +61,7 @@ class Scenario:
                 password=broker.password
             )
         node = Node(node_name=self._name,
-                    transport_connection_params=conn_params,
+                    connection_params=conn_params,
                     debug=False)
         return node
 

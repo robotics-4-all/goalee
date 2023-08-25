@@ -37,6 +37,8 @@ class Entity:
 
 
     def create_node(self):
+        if self.broker is None:
+            raise ValueError(f'Entity {self.name} not assigned a broker')
         if self.broker.__class__.__name__ == 'RedisBroker':
             from commlib.transports.redis import ConnectionParameters
             conn_params = ConnectionParameters(

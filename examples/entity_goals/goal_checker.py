@@ -5,26 +5,26 @@ from goalee.entity_goals import EntityStateChange, EntityStateCondition
 
 from goalee.entity import Entity
 
+FrontSonar = Entity(
+    name='front_sonar',
+    etype='sensor',
+    topic='sensors.sonar.front',
+    attributes=[
+        'range', 'hfov', 'vfov', 'header'
+    ],
+    # broker=broker
+)
+
 
 
 if __name__ == '__main__':
     broker = MQTTBroker(host='localhost', port=1883)
 
-    sonar = Entity(
-        name='front_sonar',
-        etype='sensor',
-        topic='sensors.sonar.front',
-        attributes=[
-            'range', 'hfov', 'vfov', 'header'
-        ],
-        broker=broker
-    )
-
     t = Scenario("Scenario_1", broker)
 
-    g1 = EntityStateChange(entity=sonar,
+    g1 = EntityStateChange(entity=FrontSonar,
                            max_duration=10.0)
-    g2 = EntityStateCondition(entities=[sonar],
+    g2 = EntityStateCondition(entities=[FrontSonar],
                               max_duration=10.0,
                               condition=lambda entities: True if
                                   entities['front_sonar'].attributes['range'] > 5 \

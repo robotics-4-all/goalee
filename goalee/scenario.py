@@ -75,11 +75,12 @@ class Scenario:
     def create_entities(self):
         for goal in self._goals:
             for entity in goal.entities:
+                if self._broker is not None:
+                    entity.broker = self._broker
                 entity.start()
 
     def run_seq(self):
         self.create_entities()
-        # return
         for g in self._goals:
             g.enter()
         print(
@@ -90,7 +91,6 @@ class Scenario:
 
     def run_concurrent(self):
         self.create_entities()
-        return
         n_threads = len(self._goals)
         features = []
         executor = ThreadPoolExecutor(n_threads)

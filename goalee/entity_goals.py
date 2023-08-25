@@ -1,10 +1,7 @@
 from typing import Any, Optional, Callable, List
-from enum import IntEnum
 
 import time
 import uuid
-
-from commlib.node import Node
 
 from goalee.goal import Goal, GoalState
 from goalee.entity import Entity

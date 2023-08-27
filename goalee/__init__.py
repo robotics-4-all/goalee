@@ -8,3 +8,4 @@ from goalee.scenario import Scenario
 from goalee.brokers import (
     Broker, MQTTBroker, RedisBroker, AMQPBroker
 )
+from goalee.entity import Entity

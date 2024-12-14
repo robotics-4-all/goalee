@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-from goalee import Target, RedisMiddleware
+from goalee import Target, RedisBroker
 from goalee.area_goals import RectangleAreaGoal, CircularAreaGoal
 from goalee.types import Point
 
 
 if __name__ == '__main__':
-    middleware = RedisMiddleware()
-    t = Target(middleware)
+    middleware = RedisBroker()
+    return
 
     g1 = RectangleAreaGoal(topic='robot.pose',
                            bottom_left_edge=Point(0.0, 0.0),

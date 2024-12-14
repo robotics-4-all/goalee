@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 
 from commlib.node import Node
 from goalee.goal import Goal
-from goalee.brokers import Broker, AMQPBroker, MQTTBroker, RedisBroker
+from goalee.brokers import Broker
 
 
 class Scenario:

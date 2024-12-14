@@ -58,7 +58,7 @@ class RectangleAreaGoal(Goal):
     def on_exit(self):
         pass
 
-    def run_for_entities(self):
+    def check_area(self):
         for _last_state in self._last_states:
             if _last_state.get('position', None) is None:
                 continue
@@ -77,7 +77,7 @@ class RectangleAreaGoal(Goal):
 
     def tick(self):
         self._last_states = [entity.attributes.copy() for entity in self._entities]
-        self.run_for_entities()
+        self.check_area()
 
 
 class CircularAreaGoal(Goal):
@@ -112,7 +112,7 @@ class CircularAreaGoal(Goal):
         print(f'-> center: {self._center}')
         print(f'-> radius: {self._radius}')
 
-    def run_for_entities(self):
+    def check_area(self):
         for _last_state in self._last_states:
             if _last_state.get('position', None) is None:
                 continue
@@ -136,4 +136,4 @@ class CircularAreaGoal(Goal):
 
     def tick(self):
         self._last_states = [entity.attributes.copy() for entity in self._entities]
-        self.run_for_entities()
+        self.check_area()

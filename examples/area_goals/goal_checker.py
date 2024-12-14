@@ -31,6 +31,6 @@ if __name__ == '__main__':
                           center=Point(6.0, 6.0),
                           radius=5.0,
                           max_duration=30.0)
-    # t.add_goal(g1)
+    t.add_goal(g1)
     t.add_goal(g2)
     t.run_seq()

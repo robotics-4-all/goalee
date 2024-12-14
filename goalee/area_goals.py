@@ -31,7 +31,7 @@ class RectangleAreaGoal(Goal):
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None,
-                 tick_interval: Optional[float] = 1):
+                 tick_interval: Optional[float] = 0.1):
         super().__init__(entities,
                          event_emitter,
                          name=name,
@@ -60,7 +60,6 @@ class RectangleAreaGoal(Goal):
 
     def run_for_entities(self):
         for _last_state in self._last_states:
-            print(_last_state)
             if _last_state.get('position', None) is None:
                 continue
             pos = _last_state['position']
@@ -77,7 +76,6 @@ class RectangleAreaGoal(Goal):
                 self.set_state(GoalState.FAILED)
 
     def tick(self):
-        print('Ticking...')
         self._last_states = [entity.attributes.copy() for entity in self._entities]
         self.run_for_entities()
 
@@ -85,47 +83,49 @@ class RectangleAreaGoal(Goal):
 class CircularAreaGoal(Goal):
 
     def __init__(self,
-                 topic: str,
+                 entities: List[Entity],
                  center: Point,
                  radius: float,
                  tag: AreaGoalTag = AreaGoalTag.ENTER,
-                 comm_node: Optional[Node] = None,
                  name: Optional[str] = None,
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
-        super().__init__(comm_node, event_emitter, name=name,
+        super().__init__(entities,event_emitter, name=name,
                          max_duration=max_duration,
                          min_duration=min_duration)
-        self._topic = topic
-        self._msg = None
         self._center = center
         self._radius = radius
         self._tag = tag
+        self._last_states = [entity.attributes.copy() for entity in self._entities]
 
     @property
     def tag(self):
         return self._tag
 
+    def on_exit(self):
+        pass
+
     def on_enter(self):
         print(f'Starting CircularAreaGoal <{self._name}> with params:')
-        print(f'-> topic: {self._topic}')
+        print(f'-> Entities: {self._entities}')
         print(f'-> center: {self._center}')
         print(f'-> radius: {self._radius}')
-        self._listener = self._comm_node.create_subscriber(
-            topic=self._topic, on_message=self._on_message
-        )
-        self._listener.run()
 
-    def on_exit(self):
-        self._listener.stop()
-
-    def _on_message(self, msg):
-        pos = msg['position']
-        dist = self._calc_distance(pos)
-        if dist < self._radius and self.tag == AreaGoalTag.ENTER:
-            # inside the circle
-            self.set_state(GoalState.COMPLETED)
+    def run_for_entities(self):
+        for _last_state in self._last_states:
+            if _last_state.get('position', None) is None:
+                continue
+            pos = _last_state['position']
+            if pos['x'] == None or pos['y'] == None:
+                continue
+            dist = self._calc_distance(pos)
+            reached = dist <= self._radius
+            if reached and self.tag == AreaGoalTag.ENTER:
+                # inside the circle
+                self.set_state(GoalState.COMPLETED)
+            elif not reached and self.tag == AreaGoalTag.AVOID:
+                self.set_state(GoalState.FAILED)
 
     def _calc_distance(self, pos):
         d = math.sqrt(
@@ -133,3 +133,7 @@ class CircularAreaGoal(Goal):
             (pos['y'] - self._center.y)**2
         )
         return d
+
+    def tick(self):
+        self._last_states = [entity.attributes.copy() for entity in self._entities]
+        self.run_for_entities()

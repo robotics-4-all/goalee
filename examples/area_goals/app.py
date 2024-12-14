@@ -9,7 +9,7 @@ from commlib.node import Node
 
 
 class PoseMessage(PubSubMessage):
-    header: MessageHeader = MessageHeader()
+    # header: MessageHeader = MessageHeader()
     position: dict = Field(
         default_factory=lambda: {'x': 0.0, 'y': 0.0, 'z': 0.0})
     orientation: dict = Field(
@@ -18,7 +18,7 @@ class PoseMessage(PubSubMessage):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        broker = 'redis'
+        broker = 'mqtt'
     else:
         broker = str(sys.argv[1])
     if broker == 'redis':
@@ -37,7 +37,7 @@ if __name__ == '__main__':
                 debug=False)
 
     pub = node.create_publisher(msg_type=PoseMessage,
-                                topic='robot.pose')
+                                topic='myrobot.pose')
     node.run()
 
     msg = PoseMessage()

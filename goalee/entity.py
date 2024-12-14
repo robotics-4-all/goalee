@@ -98,24 +98,21 @@ class Entity:
         # Update state
         self.state = new_state
         # Update attributes based on state
-        self.update_attributes(self.attributes, new_state)
-        self.update_buffers(self.attributes_buff, new_state)
+        self.update_attributes(new_state)
+        self.update_buffers(new_state)
 
-    @staticmethod
-    def update_buffers(root, new_state):
+    def update_buffers(self, new_state):
         """
         Recursive function used by update_state() mainly to updated
             dictionaries/objects and normal Attributes.
         """
         # Update attributes
         for attribute, value in new_state.items():
-
             # If value is a dictionary, also update the Dict's subattributes/items
-            if root[attribute] is not None:
-                root[attribute].append(value)
+            if self.attributes_buff[attribute] is not None:
+                self.attributes_buff[attribute].append(value)
 
-    @staticmethod
-    def update_attributes(root, new_state):
+    def update_attributes(self, new_state):
         """
         Recursive function used by update_state() mainly to updated
             dictionaries/objects and normal Attributes.
@@ -127,5 +124,6 @@ class Entity:
             #     setattr(root[attribute].value, 'hour', value['hour'])
             #     setattr(root[attribute].value, 'minute', value['minute'])
             #     setattr(root[attribute].value, 'second', value['second'])
-            root[key] = value
+            if key in self.attributes:
+                self.attributes[key] = value
 

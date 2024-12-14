@@ -27,15 +27,17 @@ class RectangleAreaGoal(Goal):
                  length_x: float,
                  length_y: float,
                  tag: AreaGoalTag = AreaGoalTag.ENTER,
-                 comm_node: Optional[Node] = None,
                  name: Optional[str] = None,
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None):
-        super().__init__(event_emitter, name=name,
+                 min_duration: Optional[float] = None,
+                 tick_interval: Optional[float] = 1):
+        super().__init__(entities,
+                         event_emitter,
+                         name=name,
                          max_duration=max_duration,
-                         min_duration=min_duration)
-        self._entities = entities
+                         min_duration=min_duration,
+                         tick_freq=int(1.0 / tick_interval))
         self._bottom_left_edge = bottom_left_edge
         self._length_x = length_x
         self._length_y = length_y
@@ -48,7 +50,7 @@ class RectangleAreaGoal(Goal):
 
     def on_enter(self):
         print(f'Starting RectangleAreaGoal <{self._name}> with params:')
-        print(f'-> topic: {self._topic}')
+        print(f'-> Entities: {self._entities}')
         print(f'-> bottom_left_edge: {self._bottom_left_edge}')
         print(f'-> length_x: {self._length_x}')
         print(f'-> length_y: {self._length_y}')
@@ -56,24 +58,28 @@ class RectangleAreaGoal(Goal):
     def on_exit(self):
         pass
 
-    def check_existence(self):
+    def run_for_entities(self):
         for _last_state in self._last_states:
-            print(_last_state.state)
-            if 'position' not in _last_state:
-                return False
-        x_axis = (pos['x'] < (self._bottom_left_edge.x + self._length_x)
-                  and pos['x'] > self._bottom_left_edge.x)
-        y_axis = (pos['y'] < (self._bottom_left_edge.y + self._length_y)
-                  and pos['y'] > self._bottom_left_edge.y)
-        reached = x_axis and y_axis
-        if reached and self.tag == AreaGoalTag.ENTER:
-            self.set_state(GoalState.COMPLETED)
-        elif not reached and self.tag == AreaGoalTag.AVOID:
-            self.set_state(GoalState.FAILED)
+            print(_last_state)
+            if _last_state.get('position', None) is None:
+                continue
+            pos = _last_state['position']
+            if pos['x'] == None or pos['y'] == None:
+                continue
+            x_axis = (pos['x'] < (self._bottom_left_edge.x + self._length_x)
+                    and pos['x'] > self._bottom_left_edge.x)
+            y_axis = (pos['y'] < (self._bottom_left_edge.y + self._length_y)
+                    and pos['y'] > self._bottom_left_edge.y)
+            reached = x_axis and y_axis
+            if reached and self.tag == AreaGoalTag.ENTER:
+                self.set_state(GoalState.COMPLETED)
+            elif not reached and self.tag == AreaGoalTag.AVOID:
+                self.set_state(GoalState.FAILED)
 
     def tick(self):
         print('Ticking...')
         self._last_states = [entity.attributes.copy() for entity in self._entities]
+        self.run_for_entities()
 
 
 class CircularAreaGoal(Goal):

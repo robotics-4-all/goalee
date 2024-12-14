@@ -1,4 +1,4 @@
-from typing import Any, Optional, Callable
+from typing import Any, List, Optional, Callable
 from enum import IntEnum
 
 import time
@@ -7,6 +7,7 @@ import math
 
 from commlib.node import Node
 
+from goalee.entity import Entity
 from goalee.goal import Goal, GoalState
 from goalee.types import Point
 
@@ -21,7 +22,7 @@ class AreaGoalTag(IntEnum):
 class RectangleAreaGoal(Goal):
 
     def __init__(self,
-                 topic: str,
+                 entities: List[Entity],
                  bottom_left_edge: Point,
                  length_x: float,
                  length_y: float,
@@ -31,15 +32,15 @@ class RectangleAreaGoal(Goal):
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
-        super().__init__(comm_node, event_emitter, name=name,
+        super().__init__(event_emitter, name=name,
                          max_duration=max_duration,
                          min_duration=min_duration)
-        self._topic = topic
-        self._msg = None
+        self._entities = entities
         self._bottom_left_edge = bottom_left_edge
         self._length_x = length_x
         self._length_y = length_y
         self._tag = tag
+        self._last_states = [entity.attributes.copy() for entity in self._entities]
 
     @property
     def tag(self):
@@ -51,16 +52,15 @@ class RectangleAreaGoal(Goal):
         print(f'-> bottom_left_edge: {self._bottom_left_edge}')
         print(f'-> length_x: {self._length_x}')
         print(f'-> length_y: {self._length_y}')
-        self._listener = self._comm_node.create_subscriber(
-            topic=self._topic, on_message=self._on_message
-        )
-        self._listener.run()
 
     def on_exit(self):
-        self._listener.stop()
+        pass
 
-    def _on_message(self, msg):
-        pos = msg['position']
+    def check_existence(self):
+        for _last_state in self._last_states:
+            print(_last_state.state)
+            if 'position' not in _last_state:
+                return False
         x_axis = (pos['x'] < (self._bottom_left_edge.x + self._length_x)
                   and pos['x'] > self._bottom_left_edge.x)
         y_axis = (pos['y'] < (self._bottom_left_edge.y + self._length_y)
@@ -70,6 +70,10 @@ class RectangleAreaGoal(Goal):
             self.set_state(GoalState.COMPLETED)
         elif not reached and self.tag == AreaGoalTag.AVOID:
             self.set_state(GoalState.FAILED)
+
+    def tick(self):
+        print('Ticking...')
+        self._last_states = [entity.attributes.copy() for entity in self._entities]
 
 
 class CircularAreaGoal(Goal):

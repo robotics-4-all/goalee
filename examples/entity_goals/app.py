@@ -4,7 +4,7 @@ import sys
 import time
 
 from commlib.msg import PubSubMessage, MessageHeader
-from commlib.node import Node, TransportType
+from commlib.node import Node
 
 
 class SonarMessage(PubSubMessage):
@@ -32,15 +32,19 @@ if __name__ == '__main__':
 
     node = Node(node_name='sensors.sonar.front',
                 connection_params=conn_params,
-                # heartbeat_uri='nodes.add_two_ints.heartbeat',
                 debug=True)
 
     pub = node.create_publisher(msg_type=SonarMessage,
                                 topic='sensors.sonar.front')
+    node.run()
 
     msg = SonarMessage()
-    while True:
-        print(f'Sending Message: {msg}')
-        pub.publish(msg)
-        msg.range += 1
-        time.sleep(1)
+    try:
+        while True:
+            print(f'Sending Message: {msg}')
+            pub.publish(msg)
+            msg.range += 1
+            time.sleep(1)
+    except KeyboardInterrupt:
+        # node.stop()
+        pass

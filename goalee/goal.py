@@ -1,9 +1,10 @@
-from abc import ABCMeta, abstractmethod
-from typing import Any, Optional
+from typing import Any, List, Optional
 from enum import IntEnum
 
 import time
 import uuid
+
+from goalee.entity import Entity
 
 
 class GoalState(IntEnum):
@@ -13,9 +14,10 @@ class GoalState(IntEnum):
     FAILED = 3
 
 
-class Goal(metaclass=ABCMeta):
+class Goal():
 
     def __init__(self,
+                 entities: Optional[List[Entity]],
                  event_emitter: Optional[Any] = None,
                  name: Optional[str] = None,
                  tick_freq: Optional[int] = 10,  # hz
@@ -29,7 +31,12 @@ class Goal(metaclass=ABCMeta):
             name = self._gen_random_name()
         self._name = name
         self._freq = tick_freq
+        self._entities = entities
         self.set_state(GoalState.IDLE)
+
+    @property
+    def entities(self):
+        return self._entities
 
     @property
     def name(self):
@@ -72,11 +79,9 @@ class Goal(metaclass=ABCMeta):
         self._status = status
         return self.state
 
-    @abstractmethod
     def on_enter(self):
         pass
 
-    @abstractmethod
     def tick(self):
         pass
 
@@ -99,9 +104,8 @@ class Goal(metaclass=ABCMeta):
                 self.set_state(GoalState.FAILED)
         self.on_exit()
 
-    @abstractmethod
     def on_exit(self):
-        pass
+        raise NotImplementedError("on_exit is not implemented")
 
     def _gen_random_name(self) -> str:
         """gen_random_id.

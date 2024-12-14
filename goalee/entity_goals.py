@@ -15,12 +15,13 @@ class EntityStateChange(Goal):
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
-        super().__init__(event_emitter,
+        super().__init__([entity],
+                         event_emitter,
                          name=name,
                          max_duration=max_duration,
                          min_duration=min_duration)
-        self.entities = [entity]
-        self._last_state = self.entities[0].attributes.copy()
+        self.entity = entity
+        self._last_state = self.entity.attributes.copy()
 
     def on_enter(self):
         pass
@@ -29,9 +30,9 @@ class EntityStateChange(Goal):
         pass
 
     def tick(self):
-        if self._last_state != self.entities[0].attributes:
+        if self._last_state != self.entity.attributes:
             self.set_state(GoalState.COMPLETED)
-        self._last_state = self.entities[0].attributes.copy()
+        self._last_state = self.entity.attributes.copy()
 
 
 class EntityStateCondition(Goal):
@@ -43,13 +44,15 @@ class EntityStateCondition(Goal):
                  condition: Optional[Callable] = None,
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
-        super().__init__(event_emitter,
+        super().__init__(entities,
+                         event_emitter,
                          name=name,
                          max_duration=max_duration,
                          min_duration=min_duration)
-        self.entities = entities
-        self._entities = {e.name: e for e in entities}
         self._condition = condition
+
+    def get_entities_map(self):
+        return {e.name: e for e in self._entities}
 
     def on_enter(self):
         pass
@@ -59,7 +62,7 @@ class EntityStateCondition(Goal):
 
     def tick(self):
         try:
-            if self._condition(self._entities):
+            if self._condition(self.get_entities_map()):
                 self.set_state(GoalState.COMPLETED)
         except TypeError:
             pass

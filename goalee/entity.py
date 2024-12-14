@@ -71,7 +71,6 @@ class Entity:
 
         self.node = Node(node_name=self.camel_name,
                          connection_params=self.conn_params,
-                         # heartbeat_uri='nodes.add_two_ints.heartbeat',
                          debug=False)
 
     def start(self):

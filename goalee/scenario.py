@@ -75,8 +75,6 @@ class Scenario:
     def start_entities(self):
         for goal in self._goals:
             for entity in goal.entities:
-                if self._broker is not None:
-                    entity.broker = self._broker
                 entity.start()
 
     def run_seq(self):

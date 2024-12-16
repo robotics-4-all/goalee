@@ -5,7 +5,7 @@ from commlib.node import Node
 
 # A class representing an entity communicating via an MQTT broker on a specific topic
 class Entity:
-    def __init__(self, name, etype, topic, attributes, broker=None):
+    def __init__(self, name, etype, topic, attributes, source=None):
         # Entity name
         self.name = name
         self.camel_name = self.to_camel_case(name)
@@ -15,7 +15,7 @@ class Entity:
         # Entity state
         self.state = {}
         # Set Entity's MQTT Broker
-        self.broker = broker
+        self.source = source
         # Entity's Attributes
         self.attributes = {key: None for key in attributes}
         self.attributes_buff = {attr: None for attr in self.attributes}
@@ -37,33 +37,33 @@ class Entity:
 
 
     def create_node(self):
-        if self.broker is None:
+        if self.source is None:
             raise ValueError(f'Entity {self.name} not assigned a broker')
-        if self.broker.__class__.__name__ == 'RedisBroker':
+        if self.source.__class__.__name__ == 'RedisBroker':
             from commlib.transports.redis import ConnectionParameters
             conn_params = ConnectionParameters(
-                host=self.broker.host,
-                port=self.broker.port,
-                db=self.broker.db,
-                username=self.broker.username,
-                password=self.broker.password
+                host=self.source.host,
+                port=self.source.port,
+                db=self.source.db,
+                username=self.source.username,
+                password=self.source.password
             )
-        elif self.broker.__class__.__name__ == 'AMQPBroker':
+        elif self.source.__class__.__name__ == 'AMQPBroker':
             from commlib.transports.amqp import ConnectionParameters
             conn_params = ConnectionParameters(
-                host=self.broker.host,
-                port=self.broker.port,
-                vhost=self.broker.vhost,
-                username=self.broker.username,
-                password=self.broker.password
+                host=self.source.host,
+                port=self.source.port,
+                vhost=self.source.vhost,
+                username=self.source.username,
+                password=self.source.password
             )
-        elif self.broker.__class__.__name__ == 'MQTTBroker':
+        elif self.source.__class__.__name__ == 'MQTTBroker':
             from commlib.transports.mqtt import ConnectionParameters
             conn_params = ConnectionParameters(
-                host=self.broker.host,
-                port=self.broker.port,
-                username=self.broker.username,
-                password=self.broker.password
+                host=self.source.host,
+                port=self.source.port,
+                username=self.source.username,
+                password=self.source.password
             )
         else:
             raise ValueError('SKATA')

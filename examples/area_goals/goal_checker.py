@@ -6,19 +6,21 @@ from goalee.entity import Entity
 from goalee.types import Point
 
 
-RobotPose = Entity(
-    name='MyRobotPose',
-    etype='sensor',
-    topic='myrobot.pose',
-    attributes=[
-        'position', 'orientation'
-    ],
-    # broker=broker
-)
+
 
 
 if __name__ == '__main__':
-    broker = MQTTBroker(host='localhost', port=1883)
+    broker = MQTTBroker(host='localhost', port=1883, username="", password="")
+
+    RobotPose = Entity(
+        name='MyRobotPose',
+        etype='sensor',
+        topic='myrobot.pose',
+        attributes=[
+            'position', 'orientation'
+        ],
+        source=broker
+    )
 
     t = Scenario("Scenario_1", broker)
 

@@ -8,7 +8,7 @@ from goalee.entity import Entity
 
 
 if __name__ == '__main__':
-    broker = MQTTBroker(host='localhost', port=1883)
+    broker = MQTTBroker(host='localhost', port=1883, username="", password="")
 
     FrontSonar = Entity(
         name='front_sonar',

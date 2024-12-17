@@ -62,7 +62,36 @@ class EntityStateCondition(Goal):
 
     def tick(self):
         try:
-            if self._condition(self.get_entities_map()):
+            # print(type(self._condition))
+            if callable(self._condition) and self._condition.__name__ == "<lambda>":
+                cond_state = self._condition(self.get_entities_map())
+            elif isinstance(self._condition, str):
+                cond_state = self.evaluate_condition(self.get_entities_map())
+            if cond_state:
                 self.set_state(GoalState.COMPLETED)
         except TypeError:
             pass
+
+
+    def evaluate_condition(self, entities):
+        import statistics
+        try:
+            if eval(
+                self._condition,
+                {
+                    'entities': entities
+                },
+                {
+                    'std': statistics.stdev,
+                    'var': statistics.variance,
+                    'mean': statistics.mean,
+                    'min': min,
+                    'max': max,
+                }
+            ):
+                return True
+            else:
+                return False
+        except Exception as e:
+            print(e)
+            return False

@@ -7,6 +7,7 @@ from typing import Any, List, Optional
 from commlib.node import Node
 from goalee.goal import Goal
 from goalee.brokers import Broker
+from goalee.logging import default_logger as logger
 
 
 class Scenario:
@@ -81,11 +82,11 @@ class Scenario:
         self.start_entities()
         for g in self._goals:
             g.enter()
-        print(
+        logger.info(
             f'Finished Scenario <{self._name}> in Ordered/Sequential Mode')
         score = self.calc_score()
-        print(f'Results for Scenario <{self._name}>: {self.make_result_list()}')
-        print(f'Score for Scenario <{self._name}>: {score}')
+        logger.info(f'Results for Scenario <{self._name}>: {self.make_result_list()}')
+        logger.info(f'Score for Scenario <{self._name}>: {score}')
 
     def run_concurrent(self):
         self.start_entities()
@@ -97,10 +98,10 @@ class Scenario:
             features.append(feature)
         for f in as_completed(features):
             pass
-        print(f'Finished Scenario <{self._name}> in Concurrent Mode')
+        logger.info(f'Finished Scenario <{self._name}> in Concurrent Mode')
         score = self.calc_score()
-        print(f'Results for Scenario <{self._name}>: {self.make_result_list()}')
-        print(f'Score for Scenario <{self._name}>: {score}')
+        logger.info(f'Results for Scenario <{self._name}>: {self.make_result_list()}')
+        logger.info(f'Score for Scenario <{self._name}>: {score}')
 
     def make_result_list(self):
         res_list = [(goal.name, goal.status) for goal in self._goals]

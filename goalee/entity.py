@@ -7,7 +7,7 @@ from commlib.node import Node
 # A class representing an entity communicating via an MQTT broker on a specific topic
 class Entity:
     def __init__(self, name: str, etype: str, topic: str,
-                 attributes: List[str, Any], source=None,
+                 attributes: List[str], source=None,
                  init_buffers: bool = False,
                  buffer_length: int = 10) -> None:
         # Entity name
@@ -28,7 +28,6 @@ class Entity:
             for attr in self.attributes:
                 self.init_attr_buffer(attr, self.buffer_length)
 
-
     def get_buffer(self, attr_name: str, size: int = None):
         size = size if size is not None else self.attributes_buff[attr_name].maxlen
         if len(self.attributes_buff[attr_name]) != \
@@ -43,7 +42,6 @@ class Entity:
 
     def to_camel_case(self, snake_str):
         return "".join(x.capitalize() for x in snake_str.lower().split("_"))
-
 
     def create_node(self):
         if self.source is None:

@@ -5,6 +5,7 @@ import time
 import uuid
 
 from goalee.entity import Entity
+from goalee.logging import default_logger as logger
 
 
 class GoalState(IntEnum):
@@ -65,16 +66,16 @@ class Goal():
             state_str  = 'COMPLETED'
         elif self._state == GoalState.FAILED:
             state_str  = 'FAILED'
-        print(f'Goal <{self._name}> entered {state_str} state ' +
+        logger.info(f'Goal <{self.name}> entered {state_str} state ' +
               f'(maxT={self._max_duration}, minT={self._min_duration})')
 
     def enter(self):
-        print(f'Entering Goal <{self._name}:{self.__class__.__name__}>')
+        logger.info(f'Entering Goal <{self.name}>')
         self.set_state(GoalState.RUNNING)
         self.on_enter()
         self.run_until_exit()
         status = 1 if self.state == GoalState.COMPLETED else 0
-        print(f'Goal <{self._name}:{self.__class__.__name__}>' + \
+        logger.info(f'Goal <{self.name}>' + \
               f' exited with status: {self.state}')
         self._status = status
         return self.state
@@ -94,7 +95,7 @@ class Goal():
                 continue
             elif elapsed > self._max_duration:
                 self.set_state(GoalState.FAILED)
-                print(
+                logger.info(
                     f'Goal <{self._name}> exited due' + \
                     f' to timeout after {self._max_duration} seconds!')
             time.sleep(1 / self._freq)

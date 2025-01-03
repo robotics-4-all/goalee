@@ -1,11 +1,11 @@
-from abc import ABCMeta, abstractmethod
-from typing import Any, Optional
+from typing import Any, List, Optional
 from enum import IntEnum
 
 import time
 import uuid
 
-from commlib.node import Node
+from goalee.entity import Entity
+from goalee.logging import default_logger as logger
 
 
 class GoalState(IntEnum):
@@ -15,23 +15,29 @@ class GoalState(IntEnum):
     FAILED = 3
 
 
-class Goal(metaclass=ABCMeta):
+class Goal():
 
     def __init__(self,
-                 comm_node: Node,
+                 entities: Optional[List[Entity]],
                  event_emitter: Optional[Any] = None,
                  name: Optional[str] = None,
+                 tick_freq: Optional[int] = 10,  # hz
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
         self._status = 0
-        self._comm_node = comm_node
         self._ee = event_emitter
         self._max_duration = max_duration
         self._min_duration = min_duration
-        if name is None:
+        if name in (None, ""):
             name = self._gen_random_name()
         self._name = name
+        self._freq = tick_freq
+        self._entities = entities
         self.set_state(GoalState.IDLE)
+
+    @property
+    def entities(self):
+        return self._entities
 
     @property
     def name(self):
@@ -60,50 +66,47 @@ class Goal(metaclass=ABCMeta):
             state_str  = 'COMPLETED'
         elif self._state == GoalState.FAILED:
             state_str  = 'FAILED'
-        print(f'Goal <{self._name}> entered {state_str} state ' +
+        logger.info(f'Goal <{self.name}> entered {state_str} state ' +
               f'(maxT={self._max_duration}, minT={self._min_duration})')
 
     def enter(self):
-        print(f'Entering Goal <{self._name}:{self.__class__.__name__}>')
+        logger.info(f'Entering Goal <{self.name}>')
         self.set_state(GoalState.RUNNING)
         self.on_enter()
         self.run_until_exit()
         status = 1 if self.state == GoalState.COMPLETED else 0
-        print(f'Goal <{self._name}:{self.__class__.__name__}>' + \
+        logger.info(f'Goal <{self.name}>' + \
               f' exited with status: {self.state}')
         self._status = status
         return self.state
 
-    @abstractmethod
     def on_enter(self):
+        pass
+
+    def tick(self):
         pass
 
     def run_until_exit(self):
         ts_start = time.time()
         while self._state not in (GoalState.COMPLETED, GoalState.FAILED):
-            time.sleep(0.001)
+            self.tick()
             elapsed = time.time() - ts_start
             if self._max_duration in (None, 0):
                 continue
             elif elapsed > self._max_duration:
                 self.set_state(GoalState.FAILED)
-                print(
+                logger.info(
                     f'Goal <{self._name}> exited due' + \
                     f' to timeout after {self._max_duration} seconds!')
+            time.sleep(1 / self._freq)
         elapsed = time.time() - ts_start
         if self._min_duration not in  (None, 0):
             if elapsed < self._min_duration:
                 self.set_state(GoalState.FAILED)
         self.on_exit()
 
-    @abstractmethod
     def on_exit(self):
-        pass
-
-    def set_comm_node(self, comm_node: Node):
-        if not isinstance(comm_node, Node):
-            raise ValueError('')
-        self._comm_node = comm_node
+        raise NotImplementedError("on_exit is not implemented")
 
     def _gen_random_name(self) -> str:
         """gen_random_id.

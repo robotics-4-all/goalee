@@ -92,6 +92,5 @@ class EntityStateCondition(Goal):
                 return True
             else:
                 return False
-        except Exception as e:
-            print(e)
+        except Exception:
             return False

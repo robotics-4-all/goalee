@@ -62,8 +62,7 @@ class EntityStateCondition(Goal):
 
     def tick(self):
         try:
-            # print(type(self._condition))
-            if callable(self._condition) and self._condition.__name__ == "<lambda>":
+            if callable(self._condition):
                 cond_state = self._condition(self.get_entities_map())
             elif isinstance(self._condition, str):
                 cond_state = self.evaluate_condition(self.get_entities_map())

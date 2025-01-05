@@ -57,16 +57,10 @@ class ComplexGoal(Goal):
     def run_concurrent(self):
         n_threads = len(self._goals)
         features = []
-        results = []
         executor = ThreadPoolExecutor(n_threads)
         for goal in self._goals:
             feature = executor.submit(goal.enter, )
             features.append(feature)
-        # try:
-        #     for f in as_completed(features, timeout=self._max_duration):
-        #         results.append(f.result())
-        # except TimeoutError as e:
-        #     pass
         try:
             results = [future.result() for future in as_completed(features)]
         except TimeoutError as e:

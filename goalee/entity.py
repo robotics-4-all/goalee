@@ -86,7 +86,12 @@ class Entity:
                          debug=False)
 
     def start(self):
-        # Create and start communications subscriber on Entity's topic
+        """
+        Starts the entity by creating a node, setting up a subscriber to listen to messages on the entity's topic,
+        and running the subscriber. Additionally, it creates a publisher for communications on the same topic.
+
+        The subscriber will call the `update_state` method whenever a message is received on the topic.
+        """
         self.create_node()
         self.subscriber = self.node.create_subscriber(
             topic=self.topic,
@@ -99,7 +104,6 @@ class Entity:
             topic=self.topic,
         )
 
-    # Callback function for updating Entity state and triggering automations evaluation
     def update_state(self, new_state):
         """
         Function for updating Entity state. Meant to be used as a callback function by the Entity's subscriber object

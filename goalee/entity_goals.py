@@ -1,8 +1,4 @@
-from statistics import mean
 from typing import Any, Optional, Callable, List
-
-import time
-import uuid
 
 from goalee.goal import Goal, GoalState
 from goalee.entity import Entity
@@ -62,6 +58,22 @@ class EntityStateCondition(Goal):
         pass
 
     def tick(self):
+        """
+        Evaluates the condition of the goal and updates its state accordingly.
+
+        This method checks the type of the condition and evaluates it based on its type:
+        - If the condition is a lambda function, it evaluates the lambda with the entities map.
+        - If the condition is any callable, it evaluates the callable with the entities map.
+        - If the condition is a string, it evaluates the condition as a string expression.
+
+        If the condition evaluates to True, the goal state is set to COMPLETED.
+
+        Exceptions:
+            - Catches and ignores TypeError exceptions.
+
+        Raises:
+            TypeError: If there is an issue with the type of the condition.
+        """
         try:
             if isinstance(self._condition, type(lambda: None)):
                 e = self.get_entities_map()
@@ -77,6 +89,21 @@ class EntityStateCondition(Goal):
 
 
     def evaluate_condition(self, entities):
+        """
+        Evaluates a condition based on the provided entities.
+
+        This method uses the `eval` function to evaluate a condition stored in the
+        instance variable `_condition`. The condition can use statistical functions
+        such as standard deviation, variance, mean, min, and max, which are provided
+        in the local scope for the evaluation.
+
+        Args:
+            entities (list): A list of entities to be used in the condition evaluation.
+
+        Returns:
+            bool: True if the condition evaluates to True, False otherwise. If an
+                  exception occurs during evaluation, the method returns False.
+        """
         import statistics
         try:
             if eval(

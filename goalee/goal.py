@@ -70,6 +70,22 @@ class Goal():
               f'(maxT={self._max_duration}, minT={self._min_duration})')
 
     def enter(self):
+        """
+        Enter the goal, set its state to RUNNING, and execute it until it exits.
+
+        This method performs the following steps:
+        1. Logs the entry into the goal.
+        2. Sets the goal's state to RUNNING.
+        3. Calls the on_enter() method.
+        4. Runs the goal until it exits.
+        5. Determines the status based on the goal's final state.
+        6. Logs the exit status of the goal.
+        7. Sets the internal status attribute based on the goal's final state.
+        8. Returns the final state of the goal.
+
+        Returns:
+            GoalState: The final state of the goal after execution.
+        """
         logger.info(f'Entering Goal <{self.name}>')
         self.set_state(GoalState.RUNNING)
         self.on_enter()
@@ -87,6 +103,29 @@ class Goal():
         raise NotImplementedError("tick is not implemented")
 
     def run_until_exit(self):
+        """
+        Runs the goal until it reaches a terminal state (COMPLETED or FAILED) or exceeds the maximum duration.
+
+        This method repeatedly calls the `tick` method to progress the goal's state. It checks the elapsed time
+        to determine if the goal has exceeded its maximum allowed duration, in which case it sets the state to FAILED.
+        If the goal completes or fails, it calls the `on_exit` method.
+
+        The method also ensures that the goal runs for at least the minimum duration specified. If the goal completes
+        before the minimum duration, it sets the state to FAILED.
+
+        Attributes:
+            ts_start (float): The timestamp when the method starts running.
+            elapsed (float): The time elapsed since the method started running.
+
+        Raises:
+            None
+
+        Notes:
+            - The method sleeps for a duration determined by the frequency (`self._freq`) between each tick.
+            - The goal's state is checked against `GoalState.COMPLETED` and `GoalState.FAILED` to determine if it should exit.
+            - If `_max_duration` is None or 0, the goal can run indefinitely until it reaches a terminal state.
+            - If `_min_duration` is None or 0, there is no minimum duration constraint for the goal.
+        """
         ts_start = time.time()
         while self._state not in (GoalState.COMPLETED, GoalState.FAILED):
             self.tick()

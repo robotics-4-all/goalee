@@ -10,6 +10,7 @@ from commlib.node import Node
 from goalee.entity import Entity
 from goalee.goal import Goal, GoalState
 from goalee.types import Point
+from goalee.logging import default_logger as logger
 
 
 class AreaGoalTag(IntEnum):
@@ -49,11 +50,11 @@ class RectangleAreaGoal(Goal):
         return self._tag
 
     def on_enter(self):
-        print(f'Starting RectangleAreaGoal <{self._name}> with params:')
-        print(f'-> Entities: {self._entities}')
-        print(f'-> bottom_left_edge: {self._bottom_left_edge}')
-        print(f'-> length_x: {self._length_x}')
-        print(f'-> length_y: {self._length_y}')
+        logger.info(f'Starting RectangleAreaGoal <{self._name}> with params:')
+        logger.info(f'-> Entities: {self._entities}')
+        logger.info(f'-> bottom_left_edge: {self._bottom_left_edge}')
+        logger.info(f'-> length_x: {self._length_x}')
+        logger.info(f'-> length_y: {self._length_y}')
 
     def on_exit(self):
         pass
@@ -107,10 +108,10 @@ class CircularAreaGoal(Goal):
         pass
 
     def on_enter(self):
-        print(f'Starting CircularAreaGoal <{self._name}> with params:')
-        print(f'-> Entities: {self._entities}')
-        print(f'-> center: {self._center}')
-        print(f'-> radius: {self._radius}')
+        logger.info(f'Starting CircularAreaGoal <{self._name}> with params:')
+        logger.info(f'-> Entities: {self._entities}')
+        logger.info(f'-> center: {self._center}')
+        logger.info(f'-> radius: {self._radius}')
 
     def check_area(self):
         for _last_state in self._last_states:

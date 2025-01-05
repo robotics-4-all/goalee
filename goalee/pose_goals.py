@@ -10,6 +10,7 @@ from commlib.node import Node
 from goalee.entity import Entity
 from goalee.goal import Goal, GoalState
 from goalee.types import Point, Orientation
+from goalee.logging import default_logger as logger
 
 
 class PoseGoal(Goal):
@@ -34,8 +35,8 @@ class PoseGoal(Goal):
         self._deviation_ori = deviation_ori
 
     def on_enter(self):
-        print(f'Starting PoseGoal <{self._name}> with params:')
-        print(f'-> Entity: {self._entity}')
+        logger.info(f'Starting PoseGoal <{self._name}> with params:')
+        logger.info(f'-> Entity: {self._entity}')
 
     def on_exit(self):
         pass
@@ -78,8 +79,8 @@ class PositionGoal(Goal):
         self._deviation = deviation
 
     def on_enter(self):
-        print(f'Starting PoseGoal <{self._name}> with params:')
-        print(f'-> Entity: {self._entity}')
+        logger.info(f'Starting PoseGoal <{self._name}> with params:')
+        logger.info(f'-> Entity: {self._entity}')
 
     def on_exit(self):
         pass
@@ -117,8 +118,8 @@ class OrientationGoal(Goal):
         self._deviation = deviation
 
     def on_enter(self):
-        print(f'Starting OrientationGoal <{self._name}> with params:')
-        print(f'-> Entity: {self._entity}')
+        logger.info(f'Starting OrientationGoal <{self._name}> with params:')
+        logger.info(f'-> Entity: {self._entity}')
 
     def on_exit(self):
         pass

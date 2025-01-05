@@ -7,6 +7,7 @@ import uuid
 
 from commlib.node import Node
 from goalee.goal import Goal, GoalState
+from goalee.logging import default_logger as logger
 
 
 class ComplexGoalAlgorithm(IntEnum):
@@ -45,7 +46,7 @@ class ComplexGoal(Goal):
             self.run_seq()
         else:
             self.run_concurrent()
-        print(f'Finished Complex Goal in {self._algorithm} Mode ({self._name})')
+        logger.info(f'Finished Complex Goal in {self._algorithm} Mode ({self._name})')
         self.calc_result()
 
     def run_seq(self):
@@ -79,7 +80,7 @@ class ComplexGoal(Goal):
                 res_list.append(1)
             else:
                 res_list.append(0)
-        print(f'Complex Goal <{self._name}> Result List: {res_list}')
+        logger.info(f'Complex Goal <{self._name}> Result List: {res_list}')
         completed = res_list.count(1)
         failed = res_list.count(0)
 

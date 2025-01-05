@@ -6,16 +6,13 @@ from goalee.entity import Entity
 from goalee.types import Point
 
 
-
-
-
 if __name__ == '__main__':
     broker = MQTTBroker(host='localhost', port=1883, username="", password="")
 
     RobotPose = Entity(
         name='MyRobotPose',
         etype='sensor',
-        topic='myrobot.pose',
+        topic='robot_1.pose',
         attributes=[
             'position', 'orientation'
         ],

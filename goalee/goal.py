@@ -81,10 +81,10 @@ class Goal():
         return self.state
 
     def on_enter(self):
-        pass
+        raise NotImplementedError("on_enter is not implemented")
 
     def tick(self):
-        pass
+        raise NotImplementedError("tick is not implemented")
 
     def run_until_exit(self):
         ts_start = time.time()

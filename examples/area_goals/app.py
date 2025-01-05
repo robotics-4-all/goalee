@@ -2,51 +2,72 @@
 
 import sys
 import time
+from typing import Dict
 
 from commlib.msg import PubSubMessage, MessageHeader
 from pydantic import Field
 from commlib.node import Node
+from commlib.transports.mqtt import ConnectionParameters
 
 
 class PoseMessage(PubSubMessage):
     # header: MessageHeader = MessageHeader()
-    position: dict = Field(
+    position: Dict[str, float] = Field(
         default_factory=lambda: {'x': 0.0, 'y': 0.0, 'z': 0.0})
-    orientation: dict = Field(
+    orientation: Dict[str, float] = Field(
         default_factory=lambda: {'x': 0.0, 'y': 0.0, 'z': 0.0})
+
+
+class Robot(Node):
+    def __init__(self, name, connection_params, pose_uri, velocity=0.5,
+                 *args, **kwargs):
+        self.name = name
+        self.pose = PoseMessage()
+        self.pose_uri = pose_uri
+        self.velocity = velocity
+        super().__init__(node_name=name, connection_params=connection_params,
+                         *args, **kwargs)
+        self.pose_pub = self.create_publisher(msg_type=PoseMessage,
+                                              topic=self.pose_uri)
+
+    def move(self, x, y, interval=0.5):
+        vel = self.velocity
+        current_x = self.pose.position['x']
+        current_y = self.pose.position['y']
+        distance = ((x - current_x)**2 + (y - current_y)**2)**0.5
+        distance_x = x - current_x
+        distance_y = y - current_y
+        steps_x = distance_x / vel
+        steps_y = distance_y / vel
+        direction_x = 1 if steps_x > 0 else -1
+        direction_y = 1 if steps_y > 0 else -1
+
+        for _ in range(int(steps_x / interval)):
+            current_x += vel * direction_x * interval
+            self.publish_pose(current_x, current_y)
+            print(f'Current position: {current_x}, {current_y}')
+            time.sleep(interval)
+        for _ in range(int(steps_y / interval)):
+            current_y += vel * direction_y * interval
+            self.publish_pose(current_x, current_y)
+            print(f'Current position: {current_x}, {current_y}')
+            time.sleep(interval)
+
+    def publish_pose(self, x, y):
+        self.pose.position['x'] = x
+        self.pose.position['y'] = y
+        self.pose_pub.publish(self.pose)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        broker = 'mqtt'
-    else:
-        broker = str(sys.argv[1])
-    if broker == 'redis':
-        from commlib.transports.redis import ConnectionParameters
-    elif broker == 'amqp':
-        from commlib.transports.amqp import ConnectionParameters
-    elif broker == 'mqtt':
-        from commlib.transports.mqtt import ConnectionParameters
-    else:
-        print('Not a valid broker-type was given!')
-        sys.exit(1)
-    conn_params = ConnectionParameters()
+    conn_params = ConnectionParameters(reconnect_attempts=0)
 
-    node = Node(node_name='',
-                connection_params=conn_params,
-                debug=False)
+    robot_1 = Robot(name='robot_1', connection_params=conn_params,
+                    pose_uri='robot_1.pose', heartbeats=False)
 
-    pub = node.create_publisher(msg_type=PoseMessage,
-                                topic='myrobot.pose')
-    node.run()
-
-    msg = PoseMessage()
     try:
-        while True:
-            print(msg)
-            pub.publish(msg)
-            msg.position['x'] += 1
-            msg.position['y'] += 1
-            time.sleep(1)
+        robot_1.run()
+        robot_1.move(3, 3)
+        robot_1.stop()
     except KeyboardInterrupt:
-        node.stop()
+        robot_1.stop()

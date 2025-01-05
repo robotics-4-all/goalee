@@ -42,4 +42,4 @@ if __name__ == '__main__':
     t.add_goal(g2)
     t.add_goal(g3)
 
-    t.run_seq()
+    t.run_concurrent()

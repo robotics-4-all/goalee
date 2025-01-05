@@ -67,8 +67,8 @@ if __name__ == '__main__':
                                   else False
                               )
 
-    cg = ComplexGoal(max_duration=10, min_duration=1,
-                     algorithm=ComplexGoalAlgorithm.ALL_ACCOMPLISHED)
+    cg = ComplexGoal(max_duration=5, min_duration=1,
+                     algorithm=ComplexGoalAlgorithm.ALL_ACCOMPLISHED_ORDERED)
     # Add goals in complex goal
     cg.add_goal(g1)
     cg.add_goal(g2)
@@ -85,7 +85,7 @@ if __name__ == '__main__':
                                   entities['TempSensor2'].attributes['temp'] > 5 \
                                   else False
                               )
-    cg2 = ComplexGoal(max_duration=10, min_duration=1,
+    cg2 = ComplexGoal(max_duration=5, min_duration=1,
                       algorithm=ComplexGoalAlgorithm.NONE_ACCOMPLISHED)
     cg2.add_goal(g3)
     cg2.add_goal(g4)

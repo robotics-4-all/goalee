@@ -32,6 +32,7 @@ class Goal():
         self._name = name
         self._freq = tick_freq
         self._entities = entities if entities is not None else []
+        self._ts_start = -1
         self.set_state(GoalState.IDLE)
 
     @property
@@ -133,11 +134,12 @@ class Goal():
                 logger.info(
                     f'Goal <{self.__class__.__name__}:{self._name}> exited due' + \
                     f' to timeout after {self._max_duration} seconds!')
+                break
             time.sleep(1 / self._freq)
         elapsed = time.time() - ts_start
-        if self._min_duration not in  (None, 0):
-            if elapsed < self._min_duration:
-                self.set_state(GoalState.FAILED)
+        self._duration = elapsed
+        if self._min_duration not in (None, 0) and elapsed < self._min_duration:
+            self.set_state(GoalState.FAILED)
         self.on_exit()
 
     def on_exit(self):

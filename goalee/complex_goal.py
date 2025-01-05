@@ -46,6 +46,18 @@ class ComplexGoal(Goal):
     def goals(self):
         return self._goals
 
+    def enter(self):
+        self.set_state(GoalState.RUNNING)
+        ts_start = time.time()
+        self._ts_start = ts_start
+        self.on_enter()
+        elapsed = time.time() - ts_start
+        if self._max_duration in (None, 0) and elapsed > self._max_duration:
+            self.set_state(GoalState.FAILED)
+        if self._min_duration in (None, 0) and elapsed < self._min_duration:
+            self.set_state(GoalState.FAILED)
+        return self.state
+
     def on_enter(self):
         if self._algorithm in (ComplexGoalAlgorithm.ALL_ACCOMPLISHED_ORDERED,
                                ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED_ORDERED):
@@ -56,11 +68,27 @@ class ComplexGoal(Goal):
         self.calc_result()
 
     def run_seq(self):
-        ## TODO: Timeout due to maxtime
         for g in self._goals:
             g.enter()
+            if time.time() - self._ts_start > self._max_duration:
+                self.set_state(GoalState.FAILED)
+                break
 
     def run_concurrent(self):
+        """
+        Executes the 'enter' method of each goal in self._goals concurrently using a thread pool.
+
+        This method creates a thread pool with a number of threads equal to the number of goals.
+        Each goal's 'enter' method is submitted to the thread pool for execution. The results
+        of the 'enter' methods are collected and returned once all threads have completed.
+
+        If a TimeoutError occurs during the execution, it is caught and ignored.
+
+        The thread pool is shut down after all tasks are completed or if an exception occurs.
+
+        Returns:
+            list: A list of results from the 'enter' method of each goal.
+        """
         n_threads = len(self._goals)
         features = []
         executor = ThreadPoolExecutor(n_threads)
@@ -68,7 +96,7 @@ class ComplexGoal(Goal):
             feature = executor.submit(goal.enter, )
             features.append(feature)
         try:
-            results = [future.result() for future in as_completed(features)]
+            results = [future.result() for future in as_completed(features, timeout=self._max_duration)]
         except TimeoutError:
             pass
         executor.shutdown(wait=False, cancel_futures=True)

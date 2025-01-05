@@ -10,6 +10,12 @@ from commlib.node import Node
 from commlib.transports.mqtt import ConnectionParameters
 
 
+"""_summary_
+This example demonstrates how to create a simple robot that moves to a specific position.
+The robot's position is published to the `robot_1.pose` topic.
+"""
+
+
 class PoseMessage(PubSubMessage):
     # header: MessageHeader = MessageHeader()
     position: Dict[str, float] = Field(
@@ -44,13 +50,17 @@ class Robot(Node):
 
         for _ in range(int(steps_x / interval)):
             current_x += vel * direction_x * interval
+            distance = ((x - current_x)**2 + (y - current_y)**2)**0.5
             self.publish_pose(current_x, current_y)
             print(f'Current position: {current_x}, {current_y}')
+            print(f'Distance to target: {distance}')
             time.sleep(interval)
         for _ in range(int(steps_y / interval)):
             current_y += vel * direction_y * interval
+            distance = ((x - current_x)**2 + (y - current_y)**2)**0.5
             self.publish_pose(current_x, current_y)
             print(f'Current position: {current_x}, {current_y}')
+            print(f'Distance to target: {distance}')
             time.sleep(interval)
 
     def publish_pose(self, x, y):

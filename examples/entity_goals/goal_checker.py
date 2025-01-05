@@ -6,7 +6,19 @@ from goalee.entity_goals import EntityStateChange, EntityStateCondition
 
 from goalee.entity import Entity
 
+"""_summary_
+This script demonstrates how to use the `EntityStateChange` and `EntityStateCondition`
+classes to create goals that check if an entity's attribute has changed or meets a condition.
 
+Send the following JSON message to the `sensors.sonar.front` topic to simulate the front sonar sensor:
+
+{
+    "range": 10,
+    "hfov": 0.0,
+    "vfov": 0.0,
+    "header": {}
+}
+"""
 
 if __name__ == '__main__':
     broker = MQTTBroker(host='localhost', port=1883, username="", password="")

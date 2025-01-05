@@ -6,6 +6,20 @@ from goalee.entity import Entity
 from goalee.types import Point
 
 
+"""_summary_
+This script demonstrates how to use the `RectangleAreaGoal` and `CircularAreaGoal`
+classes to create goals that check if an entity is within a rectangular or circular area.
+
+Send the following JSON message to the `robot_1.pose` topic to simulate the robot's pose:
+
+{
+  "position": {"x": 1, "y": 0, "z": 0},
+  "orientation": {"x": 0, "y": 0, "z": 0}
+}
+
+"""
+
+
 if __name__ == '__main__':
     broker = MQTTBroker(host='localhost', port=1883, username="", password="")
 

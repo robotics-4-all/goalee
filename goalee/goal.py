@@ -24,7 +24,6 @@ class Goal():
                  tick_freq: Optional[int] = 10,  # hz
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
-        self._status = 0
         self._ee = event_emitter
         self._max_duration = max_duration
         self._min_duration = min_duration
@@ -45,28 +44,30 @@ class Goal():
 
     @property
     def status(self):
-        return self._status
+        return 1 if self.state == GoalState.COMPLETED else 0
 
     @property
     def state(self):
         return self._state
 
     def set_state(self, state: GoalState):
+        """
+        Sets the state of the goal.
+
+        Args:
+            state (GoalState): The new state to set for the goal.
+
+        Raises:
+            ValueError: If the provided state is not a valid GoalState.
+
+        """
         if state not in GoalState:
             raise ValueError('Not a valid state was given')
         self._state = state
         self._report_state()
 
     def _report_state(self):
-        if self._state == GoalState.IDLE:
-            state_str  = 'IDLE'
-        elif self._state == GoalState.RUNNING:
-            state_str  = 'RUNNING'
-        elif self._state == GoalState.COMPLETED:
-            state_str  = 'COMPLETED'
-        elif self._state == GoalState.FAILED:
-            state_str  = 'FAILED'
-        logger.info(f'Goal <{self.name}> entered {state_str} state ' +
+        logger.info(f'Goal <{self.__class__.__name__}:{self.name}> entered {self.state.name} state ' +
               f'(maxT={self._max_duration}, minT={self._min_duration})')
 
     def enter(self):
@@ -86,14 +87,9 @@ class Goal():
         Returns:
             GoalState: The final state of the goal after execution.
         """
-        logger.info(f'Entering Goal <{self.name}>')
         self.set_state(GoalState.RUNNING)
         self.on_enter()
         self.run_until_exit()
-        status = 1 if self.state == GoalState.COMPLETED else 0
-        logger.info(f'Goal <{self.name}>' + \
-              f' exited with status: {self.state}')
-        self._status = status
         return self.state
 
     def on_enter(self):
@@ -135,7 +131,7 @@ class Goal():
             elif elapsed > self._max_duration:
                 self.set_state(GoalState.FAILED)
                 logger.info(
-                    f'Goal <{self._name}> exited due' + \
+                    f'Goal <{self.__class__.__name__}:{self._name}> exited due' + \
                     f' to timeout after {self._max_duration} seconds!')
             time.sleep(1 / self._freq)
         elapsed = time.time() - ts_start

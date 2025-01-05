@@ -77,21 +77,19 @@ class Scenario:
         """
         self._goals.append(goal)
 
-    def start_entities(self):
+    def start_entities(self, goals: List[Goal] = None) -> None:
         """
         Starts all entities associated with the goals in the scenario.
 
         This method iterates over each goal in the scenario and calls the
         `start` method on each entity associated with that goal.
         """
-        for goal in self._goals:
+        for goal in goals:
             if goal.__class__.__name__ == 'ComplexGoal':
-                for subgoal in goal.goals:
-                    for entity in subgoal.entities:
-                        entity.start()
-                continue
-            for entity in goal.entities:
-                entity.start()
+                self.start_entities(goal.goals)
+            else:
+                for entity in goal.entities:
+                    entity.start()
 
     def run_seq(self) -> None:
         """
@@ -107,7 +105,7 @@ class Scenario:
         Returns:
             None
         """
-        self.start_entities()
+        self.start_entities(self._goals)
         for g in self._goals:
             g.enter()
         logger.info(
@@ -128,7 +126,7 @@ class Scenario:
         Returns:
             None
         """
-        self.start_entities()
+        self.start_entities(self._goals)
         n_threads = len(self._goals)
         features = []
         executor = ThreadPoolExecutor(n_threads)

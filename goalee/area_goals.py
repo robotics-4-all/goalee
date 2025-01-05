@@ -52,9 +52,9 @@ class RectangleAreaGoal(Goal):
     def on_enter(self):
         logger.info(f'Starting RectangleAreaGoal <{self._name}> with params:')
         logger.info(f'-> Entities: {self._entities}')
-        logger.info(f'-> bottom_left_edge: {self._bottom_left_edge}')
-        logger.info(f'-> length_x: {self._length_x}')
-        logger.info(f'-> length_y: {self._length_y}')
+        logger.info(f'-> Bottom Left Edge: {self._bottom_left_edge}')
+        logger.info(f'-> Length X: {self._length_x}')
+        logger.info(f'-> Length Y: {self._length_y}')
 
     def on_exit(self):
         pass
@@ -110,8 +110,8 @@ class CircularAreaGoal(Goal):
     def on_enter(self):
         logger.info(f'Starting CircularAreaGoal <{self._name}> with params:')
         logger.info(f'-> Entities: {self._entities}')
-        logger.info(f'-> center: {self._center}')
-        logger.info(f'-> radius: {self._radius}')
+        logger.info(f'-> Center: {self._center}')
+        logger.info(f'-> Radius: {self._radius}')
 
     def check_area(self):
         for _last_state in self._last_states:

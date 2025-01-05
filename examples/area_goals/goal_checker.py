@@ -33,14 +33,24 @@ if __name__ == '__main__':
         source=broker
     )
 
+    FrontSonar = Entity(
+        name='front_sonar',
+        etype='sensor',
+        topic='sensors.sonar.front',
+        attributes=[
+            'range', 'hfov', 'vfov', 'header'
+        ],
+        source=broker
+    )
+
     t = Scenario("Scenario_1", broker)
 
-    g1 = RectangleAreaGoal(entities=[RobotPose],
+    g1 = RectangleAreaGoal(entities=[RobotPose, FrontSonar],
                            bottom_left_edge=Point(0.0, 0.0),
                            length_x=5.0,
                            length_y=5.0,
                            max_duration=30.0)
-    g2 = CircularAreaGoal(entities=[RobotPose],
+    g2 = CircularAreaGoal(entities=[RobotPose, FrontSonar],
                           center=Point(6.0, 6.0),
                           radius=5.0,
                           max_duration=30.0)

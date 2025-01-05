@@ -55,37 +55,37 @@ if __name__ == '__main__':
     t = Scenario("Scenario_1", broker)
 
     g1 = EntityStateCondition(entities=[FrontSonar],
-                              max_duration=10.0,
+                            #   max_duration=10.0,
                               condition=lambda entities: True if
                                   entities['FrontSonar'].attributes['range'] > 5 \
                                   else False
                               )
     g2 = EntityStateCondition(entities=[RearSonar],
-                              max_duration=10.0,
+                            #   max_duration=10.0,
                               condition=lambda entities: True if
                                   entities['RearSonar'].attributes['range'] > 5 \
                                   else False
                               )
 
-    cg = ComplexGoal(max_duration=10, min_duration=0,
+    cg = ComplexGoal(max_duration=10, min_duration=1,
                      algorithm=ComplexGoalAlgorithm.ALL_ACCOMPLISHED)
     # Add goals in complex goal
     cg.add_goal(g1)
     cg.add_goal(g2)
 
     g3 = EntityStateCondition(entities=[TempSensor1],
-                              max_duration=10.0,
+                            #   max_duration=10.0,
                               condition=lambda entities: True if
                                   entities['TempSensor1'].attributes['temp'] > 5 \
                                   else False
                               )
     g4 = EntityStateCondition(entities=[TempSensor2],
-                              max_duration=10.0,
+                            #   max_duration=10.0,
                               condition=lambda entities: True if
                                   entities['TempSensor2'].attributes['temp'] > 5 \
                                   else False
                               )
-    cg2 = ComplexGoal(max_duration=10, min_duration=0,
+    cg2 = ComplexGoal(max_duration=10, min_duration=1,
                       algorithm=ComplexGoalAlgorithm.NONE_ACCOMPLISHED)
     cg2.add_goal(g3)
     cg2.add_goal(g4)

@@ -35,7 +35,7 @@ if __name__ == '__main__':
     g3 = EntityStateCondition(entities=[FrontSonar],
                               max_duration=10.0,
                               condition=lambda entities: True if
-                                  mean(entities['front_sonar'].get_buffer('range') > 5) \
+                                  mean(entities['front_sonar'].get_buffer('range', 5)) > 5 \
                                   else False
                               )
     t.add_goal(g1)

@@ -1,3 +1,4 @@
+from statistics import mean
 from typing import Any, Optional, Callable, List
 
 import time
@@ -62,13 +63,16 @@ class EntityStateCondition(Goal):
 
     def tick(self):
         try:
+            if isinstance(self._condition, type(lambda: None)):
+                e = self.get_entities_map()
+                cond_state = self._condition(e)
             if callable(self._condition):
                 cond_state = self._condition(self.get_entities_map())
             elif isinstance(self._condition, str):
                 cond_state = self.evaluate_condition(self.get_entities_map())
             if cond_state:
                 self.set_state(GoalState.COMPLETED)
-        except TypeError:
+        except TypeError as e:
             pass
 
 

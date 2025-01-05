@@ -30,11 +30,16 @@ class Entity:
 
     def get_buffer(self, attr_name: str, size: int = None):
         size = size if size is not None else self.attributes_buff[attr_name].maxlen
+        # print(len(self.attributes_buff[attr_name]))
+        # print(self.attributes_buff[attr_name].maxlen)
+
         if len(self.attributes_buff[attr_name]) != \
             self.attributes_buff[attr_name].maxlen:
-            return [0] * size
+            buffer = [0] * size
         else:
-            return self.attributes_buff[attr_name]
+            buffer = list(self.attributes_buff[attr_name])[-size:]
+            # print(buffer)
+        return buffer
 
     def init_attr_buffer(self, attr_name, size):
         self.attributes_buff[attr_name] = deque(maxlen=size)

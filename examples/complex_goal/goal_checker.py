@@ -1,29 +1,90 @@
 #!/usr/bin/env python3
 
-from goalee import Target, RedisMiddleware
+from goalee import Scenario, MQTTBroker
 from goalee.complex_goal import ComplexGoal, ComplexGoalAlgorithm
-from goalee.topic_goals import TopicMessageReceivedGoal, TopicMessageParamGoal
+from goalee.entity_goals import EntityStateChange, EntityStateCondition
+
+from goalee.entity import Entity
 
 
 if __name__ == '__main__':
-    middleware = RedisMiddleware()
-    t = Target(middleware)
+    broker = MQTTBroker(host='localhost', port=1883, username="", password="")
+    TempSensor1 = Entity(
+        name='TempSensor1',
+        etype='sensor',
+        topic='bedroom.sensor.temperature',
+        attributes=['temp'],
+        source=MQTTBroker(
+            host='localhost',
+            port=1883,
+            username='',
+            password='',
+        )
+    )
+    TempSensor2 = Entity(
+        name='TempSensor2',
+        etype='sensor',
+        topic='bathroom.sensor.temperature',
+        attributes=['temp'],
+        source=MQTTBroker(
+            host='localhost',
+            port=1883,
+            username='',
+            password='',
+        )
+    )
+    FrontSonar = Entity(
+        name='FrontSonar',
+        etype='sensor',
+        topic='sensors.sonar.front',
+        attributes=[
+            'range', 'hfov', 'vfov', 'header'
+        ],
+        source=broker
+    )
+    RearSonar = Entity(
+        name='RearSonar',
+        etype='sensor',
+        topic='sensors.sonar.front',
+        attributes=[
+            'range', 'hfov', 'vfov', 'header'
+        ],
+        source=broker
+    )
 
-    g1 = TopicMessageReceivedGoal(topic='sensors.sonar.front')
-    g2 = TopicMessageParamGoal(topic='sensors.sonar.front',
-                               condition=lambda msg: True if msg['range'] > 2 \
-                               else False)
-    cg = ComplexGoal(max_duration=10, min_duration=0)
+    t = Scenario("Scenario_1", broker)
+
+    g1 = EntityStateCondition(entities=[FrontSonar],
+                              max_duration=10.0,
+                              condition=lambda entities: True if
+                                  entities['FrontSonar'].attributes['range'] > 5 \
+                                  else False
+                              )
+    g2 = EntityStateCondition(entities=[RearSonar],
+                              max_duration=10.0,
+                              condition=lambda entities: True if
+                                  entities['RearSonar'].attributes['range'] > 5 \
+                                  else False
+                              )
+
+    cg = ComplexGoal(max_duration=10, min_duration=0,
+                     algorithm=ComplexGoalAlgorithm.ALL_ACCOMPLISHED)
     # Add goals in complex goal
     cg.add_goal(g1)
     cg.add_goal(g2)
 
-    g3 = TopicMessageParamGoal(topic='sensors.sonar.front',
-                               condition=lambda msg: True if msg['range'] > 3 \
-                               else False)
-    g4 = TopicMessageParamGoal(topic='sensors.sonar.front',
-                               condition=lambda msg: True if msg['range'] > 5 \
-                               else False)
+    g3 = EntityStateCondition(entities=[TempSensor1],
+                              max_duration=10.0,
+                              condition=lambda entities: True if
+                                  entities['TempSensor1'].attributes['temp'] > 5 \
+                                  else False
+                              )
+    g4 = EntityStateCondition(entities=[TempSensor2],
+                              max_duration=10.0,
+                              condition=lambda entities: True if
+                                  entities['TempSensor2'].attributes['temp'] > 5 \
+                                  else False
+                              )
     cg2 = ComplexGoal(max_duration=10, min_duration=0,
                       algorithm=ComplexGoalAlgorithm.NONE_ACCOMPLISHED)
     cg2.add_goal(g3)

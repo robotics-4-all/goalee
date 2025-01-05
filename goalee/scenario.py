@@ -85,6 +85,11 @@ class Scenario:
         `start` method on each entity associated with that goal.
         """
         for goal in self._goals:
+            if goal.__class__.__name__ == 'ComplexGoal':
+                for subgoal in goal.goals:
+                    for entity in subgoal.entities:
+                        entity.start()
+                continue
             for entity in goal.entities:
                 entity.start()
 

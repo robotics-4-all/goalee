@@ -28,17 +28,23 @@ class ComplexGoal(Goal):
                  accomplished: Optional[int] = None,
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None):
+                 min_duration: Optional[float] = None,
+                 *args, **kwargs):
         super().__init__(comm_node,
                          event_emitter,
                          name=name,
                          max_duration=max_duration,
-                         min_duration=min_duration)
+                         min_duration=min_duration,
+                         *args, **kwargs)
         self._goals = []
         if algorithm is None:
             algorithm = ComplexGoalAlgorithm.ALL_ACCOMPLISHED
         self._algorithm = algorithm
         self._x_accomplished = accomplished
+
+    @property
+    def goals(self):
+        return self._goals
 
     def on_enter(self):
         if self._algorithm in (ComplexGoalAlgorithm.ALL_ACCOMPLISHED_ORDERED,

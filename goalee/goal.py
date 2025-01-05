@@ -18,7 +18,7 @@ class GoalState(IntEnum):
 class Goal():
 
     def __init__(self,
-                 entities: Optional[List[Entity]],
+                 entities: Optional[List[Entity]] = None,
                  event_emitter: Optional[Any] = None,
                  name: Optional[str] = None,
                  tick_freq: Optional[int] = 10,  # hz
@@ -32,7 +32,7 @@ class Goal():
             name = self._gen_random_name()
         self._name = name
         self._freq = tick_freq
-        self._entities = entities
+        self._entities = entities if entities is not None else []
         self.set_state(GoalState.IDLE)
 
     @property

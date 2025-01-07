@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from goalee import Scenario, MQTTBroker
-from goalee.area_goals import MovingAreaGoal
+from goalee.area_goals import AreaGoalTag, MovingAreaGoal
 from goalee.entity import Entity
 
 
@@ -57,6 +57,7 @@ if __name__ == '__main__':
     g1 = MovingAreaGoal(motion_entity=Robot1Pose,
                         entities=[Robot2Pose],
                         radius=2.0,
-                        max_duration=60.0)
+                        max_duration=60.0,
+                        tag=AreaGoalTag.AVOID)
     t.add_goal(g1)
     t.run_seq()

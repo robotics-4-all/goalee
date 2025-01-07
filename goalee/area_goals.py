@@ -153,10 +153,24 @@ class MovingAreaGoal(Goal):
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
+        """
+        Initializes an AreaGoal instance.
+
+        Args:
+            motion_entity (Entity): The entity that is in motion.
+            entities (List[Entity]): A list of entities involved in the area goal.
+            radius (float): The radius defining the area goal.
+            tag (AreaGoalTag, optional): The tag indicating the type of area goal. Defaults to AreaGoalTag.ENTER.
+            name (Optional[str], optional): The name of the area goal. Defaults to None.
+            event_emitter (Optional[Any], optional): The event emitter for the area goal. Defaults to None.
+            max_duration (Optional[float], optional): The maximum duration for the area goal. Defaults to None.
+            min_duration (Optional[float], optional): The minimum duration for the area goal. Defaults to None.
+        """
+        self._mentity = motion_entity
+        entities.remove(motion_entity) if motion_entity in entities else None
         super().__init__(entities,event_emitter, name=name,
                          max_duration=max_duration,
                          min_duration=min_duration)
-        self._mentity = motion_entity
         self._radius = radius
         self._tag = tag
         self._last_states = [entity.state for entity in self._entities]

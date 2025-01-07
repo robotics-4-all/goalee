@@ -87,6 +87,11 @@ class Scenario:
         for goal in goals:
             if goal.__class__.__name__ == 'ComplexGoal':
                 self.start_entities(goal.goals)
+            elif goal.__class__.__name__ == 'MovingAreaGoal':
+                if goal.motion_entity is not None:
+                    goal.motion_entity.start()
+                for entity in goal.entities:
+                    entity.start()
             else:
                 for entity in goal.entities:
                     entity.start()

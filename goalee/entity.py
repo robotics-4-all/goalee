@@ -17,7 +17,7 @@ class Entity:
         # MQTT topic for Entity
         self.topic = topic
         # Entity state
-        self.state = {}
+        self.state = None
         # Set Entity's MQTT Broker
         self.source = source
         # Entity's Attributes
@@ -27,18 +27,20 @@ class Entity:
         if init_buffers:
             for attr in self.attributes:
                 self.init_attr_buffer(attr, self.buffer_length)
+        self._initialized = False
+        self._started = False
+
+    @property
+    def initialized(self):
+        return self._initialized
 
     def get_buffer(self, attr_name: str, size: int = None):
         size = size if size is not None else self.attributes_buff[attr_name].maxlen
-        # print(len(self.attributes_buff[attr_name]))
-        # print(self.attributes_buff[attr_name].maxlen)
-
         if len(self.attributes_buff[attr_name]) != \
             self.attributes_buff[attr_name].maxlen:
             buffer = [0] * size
         else:
             buffer = list(self.attributes_buff[attr_name])[-size:]
-            # print(buffer)
         return buffer
 
     def init_attr_buffer(self, attr_name, size):
@@ -83,7 +85,7 @@ class Entity:
 
         self.node = Node(node_name=self.camel_name,
                          connection_params=self.conn_params,
-                         debug=False)
+                         debug=False, heartbeats=False)
 
     def start(self):
         """
@@ -92,17 +94,15 @@ class Entity:
 
         The subscriber will call the `update_state` method whenever a message is received on the topic.
         """
+        if self._started:
+            return
+        self._started = True
         self.create_node()
         self.subscriber = self.node.create_subscriber(
             topic=self.topic,
             on_message=self.update_state
         )
         self.subscriber.run()
-
-        # Create communications publisher on Entity's topic
-        self.publisher = self.node.create_publisher(
-            topic=self.topic,
-        )
 
     def update_state(self, new_state):
         """
@@ -112,6 +112,7 @@ class Entity:
         :return:
         """
         # Update state
+        self._initialized = True
         self.state = new_state
         # Update attributes based on state
         self.update_attributes(new_state)

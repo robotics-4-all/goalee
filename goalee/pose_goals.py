@@ -58,6 +58,7 @@ class PoseGoal(Goal):
         self._last_state = self._entity.attributes.copy()
         self.check_pose()
 
+
 class PositionGoal(Goal):
     def __init__(self,
                  entity: Entity,

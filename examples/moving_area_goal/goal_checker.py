@@ -60,4 +60,7 @@ if __name__ == '__main__':
                         max_duration=60.0,
                         tag=AreaGoalTag.AVOID)
     t.add_goal(g1)
+    etopic = f'monitor.{t.name}.event'
+    ltopic = f'monitor.{t.name}.log'
+    t.init_rtmonitor(etopic, ltopic)
     t.run_seq()

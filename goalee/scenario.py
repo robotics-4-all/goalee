@@ -1,11 +1,13 @@
+import logging
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from commlib.node import Node
 from goalee.goal import Goal
 from goalee.brokers import Broker
 from goalee.logging import default_logger as logger
+from goalee.rtmonitor import RTMonitor
 
 
 class Scenario:
@@ -14,6 +16,7 @@ class Scenario:
                  broker: Optional[Broker] = None,
                  score_weights: Optional[List] = None):
         self._broker = broker
+        self._rtmonitor = None
         if name in (None, "") or len(name) == 0:
             name = self.gen_random_name()
         self._name = name
@@ -24,6 +27,16 @@ class Scenario:
             self._input_node = None
         self._goals = []
         self._entities = []
+
+    @property
+    def name(self):
+        return self._name
+
+    def init_rtmonitor(self, etopic, ltopic):
+        if self._input_node is not None:
+            self._rtmonitor = RTMonitor(self._input_node, etopic, ltopic)
+        else:
+            logger.warning('Cannot initialize RTMonitor without a communication node')
 
     def gen_random_name(self) -> str:
         """gen_random_id.
@@ -36,7 +49,7 @@ class Scenario:
         """
         return str(uuid.uuid4()).replace('-', '')
 
-    def _create_comm_node(self, broker):
+    def _create_comm_node(self, broker, heartbeats=False):
         if broker.__class__.__name__ == 'RedisBroker':
             from commlib.transports.redis import ConnectionParameters
             conn_params = ConnectionParameters(
@@ -65,7 +78,8 @@ class Scenario:
             )
         node = Node(node_name=self._name,
                     connection_params=conn_params,
-                    debug=False)
+                    debug=False, heartbeats=heartbeats)
+        node.run()
         return node
 
     def add_goal(self, goal: Goal):
@@ -133,13 +147,12 @@ class Scenario:
         """
         self.start_entities(self._goals)
         n_threads = len(self._goals)
-        features = []
+        futures = []
         executor = ThreadPoolExecutor(n_threads)
         for goal in self._goals:
-            feature = executor.submit(goal.enter, )
-            features.append(feature)
-        for f in as_completed(features):
-            pass
+            future = executor.submit(goal.enter, )
+            futures.append(future)
+        results = [f for f in as_completed(futures)]
         logger.info(f'Finished Scenario <{self._name}> in Concurrent Mode')
         score = self.calc_score()
         logger.info(f'Results for Scenario <{self._name}>: {self.make_result_list()}')

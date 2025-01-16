@@ -21,7 +21,7 @@ class AMQPBroker(Broker):
 
 
 class RedisBroker(Broker):
-    db: str = 0
+    db: int = 0
     host: str = "localhost"
     port: int = 6379
     username: str = ""

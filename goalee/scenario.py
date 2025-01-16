@@ -37,6 +37,8 @@ class Scenario:
             self._rtmonitor = RTMonitor(self._input_node, etopic, ltopic)
         else:
             logger.warning('Cannot initialize RTMonitor without a communication node')
+        for goal in self._goals:
+            goal.set_rtmonitor(self._rtmonitor)
 
     def gen_random_name(self) -> str:
         """gen_random_id.
@@ -127,11 +129,15 @@ class Scenario:
         self.start_entities(self._goals)
         for g in self._goals:
             g.enter()
-        logger.info(
-            f'Finished Scenario <{self._name}> in Ordered/Sequential Mode')
-        score = self.calc_score()
-        logger.info(f'Results for Scenario <{self._name}>: {self.make_result_list()}')
-        logger.info(f'Score for Scenario <{self._name}>: {score}')
+        logger.info(f"{'=' * 40}")
+        logger.info(f"Scenario '{self._name}' Completed (Sequential Mode)")
+        logger.info(f"{'=' * 40}")
+        logger.info("Results:")
+        for goal_name, goal_status in self.make_result_list():
+            logger.info(f"  - {goal_name}: {'✓' if goal_status else '✗'}")
+        logger.info(f"{'=' * 40}")
+        logger.info(f"Final Score: {self.calc_score():.2f}")
+        logger.info(f"{'=' * 40}")
 
     def run_concurrent(self) -> None:
         """
@@ -153,10 +159,15 @@ class Scenario:
             future = executor.submit(goal.enter, )
             futures.append(future)
         results = [f for f in as_completed(futures)]
-        logger.info(f'Finished Scenario <{self._name}> in Concurrent Mode')
-        score = self.calc_score()
-        logger.info(f'Results for Scenario <{self._name}>: {self.make_result_list()}')
-        logger.info(f'Score for Scenario <{self._name}>: {score}')
+        logger.info(f"{'=' * 40}")
+        logger.info(f"Scenario '{self._name}' Completed (Concurrent Mode)")
+        logger.info(f"{'=' * 40}")
+        logger.info("Results:")
+        for goal_name, goal_status in self.make_result_list():
+            logger.info(f"  - {goal_name}: {'✓' if goal_status else '✗'}")
+        logger.info(f"{'=' * 40}")
+        logger.info(f"Final Score: {self.calc_score():.2f}")
+        logger.info(f"{'=' * 40}")
 
     def make_result_list(self):
         res_list = [(goal.name, goal.status) for goal in self._goals]

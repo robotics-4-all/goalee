@@ -6,6 +6,7 @@ import uuid
 
 from goalee.entity import Entity
 from goalee.logging import default_logger as logger
+from goalee.rtmonitor import RTMonitor, EventMsg
 
 
 class GoalState(IntEnum):
@@ -24,32 +25,41 @@ class Goal():
                  tick_freq: Optional[int] = 10,  # hz
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
+        self._rtmonitor: RTMonitor = None
         self._ee = event_emitter
-        self._max_duration = max_duration
-        self._min_duration = min_duration
+        self._max_duration: float = max_duration
+        self._min_duration: float = min_duration
+        self._duration: float = -1.0
         if name in (None, ""):
             name = self._gen_random_name()
-        self._name = name
-        self._freq = tick_freq
-        self._entities = entities if entities is not None else []
-        self._ts_start = -1
+        self._name: str = name
+        self._freq: int = tick_freq
+        self._entities: List = entities if entities is not None else []
+        self._ts_start: float = -1.0
         self.set_state(GoalState.IDLE)
 
     @property
-    def entities(self):
+    def duration(self) -> float:
+        return self._duration
+
+    @property
+    def entities(self) -> list:
         return self._entities
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def status(self):
-        return 1 if self.state == GoalState.COMPLETED else 0
+    def status(self) -> bool:
+        return True if self.state == GoalState.COMPLETED else False
 
     @property
-    def state(self):
+    def state(self) -> GoalState:
         return self._state
+
+    def set_rtmonitor(self, rtmonitor):
+        self._rtmonitor = rtmonitor
 
     def set_state(self, state: GoalState):
         """
@@ -65,13 +75,30 @@ class Goal():
         if state not in GoalState:
             raise ValueError('Not a valid state was given')
         self._state = state
+        if self._rtmonitor:
+            self._send_state_change_event()
         self._report_state()
+
+    def _send_state_change_event(self):
+        event = EventMsg(
+                type='goal_state',
+                data={
+                    'goal_name': self.name,
+                    'state': self.state.name,
+                    'state_int': self.state.value,
+                    'duration': self.duration if self.duration > 0 else self.get_current_elapsed(),
+                    'ts_start': self._ts_start,
+                    'elapsed_time': self.get_current_elapsed(),
+                }
+        )
+        logger.info(f'Sending goal state change event: {event}')
+        self._rtmonitor.send_event(event)
 
     def _report_state(self):
         logger.info(f'Goal <{self.__class__.__name__}:{self.name}> entered {self.state.name} state ' +
               f'(maxT={self._max_duration}, minT={self._min_duration})')
 
-    def enter(self):
+    def enter(self, rtmonitor: RTMonitor = None):
         """
         Enter the goal, set its state to RUNNING, and execute it until it exits.
 
@@ -88,10 +115,19 @@ class Goal():
         Returns:
             GoalState: The final state of the goal after execution.
         """
+        self._ts_start = self.get_current_ts()
+        if rtmonitor is not None:
+            self.set_rtmonitor(rtmonitor)
         self.set_state(GoalState.RUNNING)
         self.on_enter()
         self.run_until_exit()
         return self.state
+
+    def get_current_ts(self):
+        return time.time()
+
+    def get_current_elapsed(self):
+        return self.get_current_ts() - self._ts_start
 
     def on_enter(self):
         raise NotImplementedError("on_enter is not implemented")
@@ -123,20 +159,20 @@ class Goal():
             - If `_max_duration` is None or 0, the goal can run indefinitely until it reaches a terminal state.
             - If `_min_duration` is None or 0, there is no minimum duration constraint for the goal.
         """
-        ts_start = time.time()
         while self._state not in (GoalState.COMPLETED, GoalState.FAILED):
             self.tick()
-            elapsed = time.time() - ts_start
+            elapsed = self.get_current_elapsed()
             if self._max_duration in (None, 0):
                 continue
             elif elapsed > self._max_duration:
+                self._duration = elapsed
                 self.set_state(GoalState.FAILED)
                 logger.info(
                     f'Goal <{self.__class__.__name__}:{self._name}> exited due' + \
                     f' to timeout after {self._max_duration} seconds!')
                 break
             time.sleep(1 / self._freq)
-        elapsed = time.time() - ts_start
+        elapsed = self.get_current_elapsed()
         self._duration = elapsed
         if self._min_duration not in (None, 0) and elapsed < self._min_duration:
             self.set_state(GoalState.FAILED)

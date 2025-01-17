@@ -1,7 +1,8 @@
 from collections import deque
-from typing import Any, List
+from typing import Any, Dict, List
 
 from commlib.node import Node
+from goalee.logging import default_logger as logger
 
 
 # A class representing an entity communicating via an MQTT broker on a specific topic
@@ -86,6 +87,10 @@ class Entity:
         self.node = Node(node_name=self.camel_name,
                          connection_params=self.conn_params,
                          debug=False, heartbeats=False)
+        self.subscriber = self.node.create_subscriber(
+            topic=self.topic,
+            on_message=self.update_state
+        )
 
     def start(self):
         """
@@ -98,13 +103,10 @@ class Entity:
             return
         self._started = True
         self.create_node()
-        self.subscriber = self.node.create_subscriber(
-            topic=self.topic,
-            on_message=self.update_state
-        )
-        self.subscriber.run()
+        self.node.run()
+        logger.info(f"Started Entity <{self.name}> listening on topic <{self.topic}>")
 
-    def update_state(self, new_state):
+    def update_state(self, new_state: Dict[str, Any]) -> None:
         """
         Function for updating Entity state. Meant to be used as a callback function by the Entity's subscriber object
         (commlib-py).
@@ -112,6 +114,11 @@ class Entity:
         :return:
         """
         # Update state
+        for key in new_state:
+            if key not in self.attributes:
+                logger.warning(f"Entity <{self.name}> received wrong message: KeyError <{key}>")
+                logger.warning("Dropping message..")
+                return
         self._initialized = True
         self.state = new_state
         # Update attributes based on state
@@ -124,6 +131,10 @@ class Entity:
             dictionaries/objects and normal Attributes.
         """
         # Update attributes
+        for key in new_state:
+            if key not in self.attributes:
+                logger.warning(f"Entity <{self.name}> received wrong message: KeyError <{key}>")
+                logger.warning("Dropping message..")
         for attribute, value in new_state.items():
             # If value is a dictionary, also update the Dict's subattributes/items
             if self.attributes_buff[attribute] is not None:

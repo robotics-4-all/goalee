@@ -1,4 +1,5 @@
 import logging
+import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Optional
@@ -22,9 +23,9 @@ class Scenario:
         self._name = name
         self._score_weights = score_weights
         if self._broker is not None:
-            self._input_node = self._create_comm_node(self._broker)
+            self._node = self._create_comm_node(self._broker)
         else:
-            self._input_node = None
+            self._node = None
         self._goals = []
         self._entities = []
 
@@ -33,8 +34,8 @@ class Scenario:
         return self._name
 
     def init_rtmonitor(self, etopic, ltopic):
-        if self._input_node is not None:
-            self._rtmonitor = RTMonitor(self._input_node, etopic, ltopic)
+        if self._node is not None:
+            self._rtmonitor = RTMonitor(self._node, etopic, ltopic)
         else:
             logger.warning('Cannot initialize RTMonitor without a communication node')
         for goal in self._goals:
@@ -59,7 +60,8 @@ class Scenario:
                 port=broker.port,
                 db=broker.db,
                 username=broker.username,
-                password=broker.password
+                password=broker.password,
+                reconnect_attempts=0,
             )
         elif broker.__class__.__name__ == 'AMQPBroker':
             from commlib.transports.amqp import ConnectionParameters
@@ -68,7 +70,8 @@ class Scenario:
                 port=broker.port,
                 vhost=broker.vhost,
                 username=broker.username,
-                password=broker.password
+                password=broker.password,
+                reconnect_attempts=0,
             )
         elif broker.__class__.__name__ == 'MQTTBroker':
             from commlib.transports.mqtt import ConnectionParameters
@@ -76,7 +79,8 @@ class Scenario:
                 host=broker.host,
                 port=broker.port,
                 username=broker.username,
-                password=broker.password
+                password=broker.password,
+                reconnect_attempts=0,
             )
         node = Node(node_name=self._name,
                     connection_params=conn_params,
@@ -140,6 +144,8 @@ class Scenario:
         logger.info(f"Final Score: {self.calc_score():.2f}")
         logger.info(f"{'=' * 40}")
         self.send_scenario_finished("sequential")
+        time.sleep(0.1)
+        self._node.stop()
 
     def run_concurrent(self) -> None:
         """
@@ -172,6 +178,8 @@ class Scenario:
         logger.info(f"Final Score: {self.calc_score():.2f}")
         logger.info(f"{'=' * 40}")
         self.send_scenario_finished("concurrent")
+        time.sleep(0.1)
+        self._node.stop()
 
     def send_scenario_started(self, execution: str):
         msg_data = {

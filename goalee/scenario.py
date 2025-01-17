@@ -7,7 +7,7 @@ from commlib.node import Node
 from goalee.goal import Goal
 from goalee.brokers import Broker
 from goalee.logging import default_logger as logger
-from goalee.rtmonitor import RTMonitor
+from goalee.rtmonitor import RTMonitor, EventMsg
 
 
 class Scenario:
@@ -126,6 +126,7 @@ class Scenario:
         Returns:
             None
         """
+        self.send_scenario_started("sequential")
         self.start_entities(self._goals)
         for g in self._goals:
             g.enter()
@@ -138,6 +139,7 @@ class Scenario:
         logger.info(f"{'=' * 40}")
         logger.info(f"Final Score: {self.calc_score():.2f}")
         logger.info(f"{'=' * 40}")
+        self.send_scenario_finished("sequential")
 
     def run_concurrent(self) -> None:
         """
@@ -151,6 +153,7 @@ class Scenario:
         Returns:
             None
         """
+        self.send_scenario_started("concurrent")
         self.start_entities(self._goals)
         n_threads = len(self._goals)
         futures = []
@@ -158,7 +161,7 @@ class Scenario:
         for goal in self._goals:
             future = executor.submit(goal.enter, )
             futures.append(future)
-        results = [f for f in as_completed(futures)]
+        _ = [f for f in as_completed(futures)]
         logger.info(f"{'=' * 40}")
         logger.info(f"Scenario '{self._name}' Completed (Concurrent Mode)")
         logger.info(f"{'=' * 40}")
@@ -168,6 +171,31 @@ class Scenario:
         logger.info(f"{'=' * 40}")
         logger.info(f"Final Score: {self.calc_score():.2f}")
         logger.info(f"{'=' * 40}")
+        self.send_scenario_finished("concurrent")
+
+    def send_scenario_started(self, execution: str):
+        msg_data = {
+            "name": self._name,
+            "goals": [g.serialize() for g in self._goals],
+            "weights": self._score_weights,
+            "execution": execution
+        }
+        event = EventMsg(type="scenario_started", data=msg_data)
+        logger.info(f'Sending scenario finished event: {event}')
+        self._rtmonitor.send_event(event)
+
+    def send_scenario_finished(self, execution: str):
+        msg_data = {
+            "name": self._name,
+            "score": self.calc_score(),
+            "results": self.make_result_list(),
+            "goals": [g.serialize() for g in self._goals],
+            "weights": self._score_weights,
+            "execution": execution
+        }
+        event = EventMsg(type="scenario_finished", data=msg_data)
+        logger.info(f'Sending scenario finished event: {event}')
+        self._rtmonitor.send_event(event)
 
     def make_result_list(self):
         res_list = [(goal.name, goal.status) for goal in self._goals]

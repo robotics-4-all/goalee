@@ -38,6 +38,14 @@ class Goal():
         self._ts_start: float = -1.0
         self.set_state(GoalState.IDLE)
 
+    def serialize(self):
+        return {
+            'name': self._name,
+            'type': self.__class__.__name__,
+            'state': self._state.name,
+            'entities': [entity.name for entity in self._entities]
+        }
+
     @property
     def duration(self) -> float:
         return self._duration

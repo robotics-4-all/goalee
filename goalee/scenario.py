@@ -130,7 +130,8 @@ class Scenario:
         Returns:
             None
         """
-        self.send_scenario_started("sequential")
+        if self._rtmonitor:
+            self.send_scenario_started("sequential")
         self.start_entities(self._goals)
         for g in self._goals:
             g.enter()
@@ -143,9 +144,11 @@ class Scenario:
         logger.info(f"{'=' * 40}")
         logger.info(f"Final Score: {self.calc_score():.2f}")
         logger.info(f"{'=' * 40}")
-        self.send_scenario_finished("sequential")
-        time.sleep(0.1)
-        self._node.stop()
+        if self._rtmonitor:
+            self.send_scenario_finished("sequential")
+            time.sleep(0.1)
+        if self._node:
+            self._node.stop()
 
     def run_concurrent(self) -> None:
         """
@@ -159,7 +162,8 @@ class Scenario:
         Returns:
             None
         """
-        self.send_scenario_started("concurrent")
+        if self._rtmonitor:
+            self.send_scenario_started("concurrent")
         self.start_entities(self._goals)
         n_threads = len(self._goals)
         futures = []
@@ -177,9 +181,11 @@ class Scenario:
         logger.info(f"{'=' * 40}")
         logger.info(f"Final Score: {self.calc_score():.2f}")
         logger.info(f"{'=' * 40}")
-        self.send_scenario_finished("concurrent")
-        time.sleep(0.1)
-        self._node.stop()
+        if self._rtmonitor:
+            self.send_scenario_finished("concurrent")
+            time.sleep(0.1)
+        if self._node:
+            self._node.stop()
 
     def send_scenario_started(self, execution: str):
         msg_data = {
@@ -220,8 +226,7 @@ class Scenario:
             float: The calculated weighted score.
         """
         if self._score_weights is None:
-            self._score_weights = [1/len(self._goals)] * len(self._goals)
-        res = [goal.status * w for goal,w in zip(self._goals,
-                                                 self._score_weights)]
+            self._score_weights = [1.0 / len(self._goals)] * len(self._goals)
+        res = [goal.status * w for goal,w in zip(self._goals, self._score_weights)]
         res = sum(res)
         return res

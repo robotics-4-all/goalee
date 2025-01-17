@@ -110,7 +110,7 @@ class CircularAreaGoal(Goal):
 
     def on_enter(self):
         logger.info(f'Starting CircularAreaGoal <{self._name}> with params:')
-        logger.info(f'-> Monitoring Entities: {self._entities}')
+        logger.info(f'-> Monitoring Entities: {[e.name for e in self._entities]}')
         logger.info(f'-> Center: {self._center}')
         logger.info(f'-> Radius: {self._radius}')
         logger.info(f'-> Strategy: {self._tag.name}')
@@ -189,7 +189,7 @@ class MovingAreaGoal(Goal):
     def on_enter(self):
         logger.info(f'Starting CircularAreaGoal <{self._name}> with params:')
         logger.info(f'-> Motion Entity: {self._mentity}')
-        logger.info(f'-> Monitoring Entities: {self._entities}')
+        logger.info(f'-> Monitoring Entities: {[e.name for e in self._entities]}')
         logger.info(f'-> Radius: {self._radius}')
         logger.info(f'-> Strategy: {self._tag.name}')
 

@@ -26,6 +26,7 @@ class Goal():
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None):
         self._rtmonitor: RTMonitor = None
+        self._state = None
         self._ee = event_emitter
         self._max_duration: float = max_duration
         self._min_duration: float = min_duration
@@ -82,6 +83,8 @@ class Goal():
         """
         if state not in GoalState:
             raise ValueError('Not a valid state was given')
+        if state == self.state:
+            return
         self._state = state
         if self._rtmonitor:
             self._send_state_change_event()

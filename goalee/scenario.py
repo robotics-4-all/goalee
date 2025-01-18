@@ -36,10 +36,10 @@ class Scenario:
     def init_rtmonitor(self, etopic, ltopic):
         if self._node is not None:
             self._rtmonitor = RTMonitor(self._node, etopic, ltopic)
+            for goal in self._goals:
+                goal.set_rtmonitor(self._rtmonitor)
         else:
             self.log_warning('Cannot initialize RTMonitor without a communication node')
-        for goal in self._goals:
-            goal.set_rtmonitor(self._rtmonitor)
 
     def gen_random_name(self) -> str:
         """gen_random_id.
@@ -82,10 +82,13 @@ class Scenario:
                 password=broker.password,
                 reconnect_attempts=0,
             )
-        node = Node(node_name=self._name,
-                    connection_params=conn_params,
-                    debug=False, heartbeats=heartbeats)
-        node.run()
+        node = Node(
+            node_name=self._name,
+            connection_params=conn_params,
+            heartbeats=heartbeats,
+            debug=False,
+        )
+        node.run(wait=True)
         return node
 
     def add_goal(self, goal: Goal):

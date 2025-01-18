@@ -31,7 +31,11 @@ class PoseGoal(Goal):
 
     def on_enter(self):
         logger.info(f'Starting PoseGoal <{self._name}> with params:')
-        logger.info(f'-> Entity: {self._entity}')
+        logger.info(f'-> Entity: {self._entity.name}')
+        logger.info(f'-> Position: {self._position}')
+        logger.info(f'-> Orientation: {self._orientation}')
+        logger.info(f'-> Deviation Position: {self._deviation_pos}')
+        logger.info(f'-> Deviation Orientation: {self._deviation_ori}')
 
     def on_exit(self):
         pass
@@ -71,12 +75,17 @@ class PositionGoal(Goal):
         super().__init__([entity], event_emitter, name=name,
                          max_duration=max_duration,
                          min_duration=min_duration)
+        self._entity = entity
         self._position = position
         self._deviation = deviation
 
     def on_enter(self):
-        logger.info(f'Starting PoseGoal <{self._name}> with params:')
-        logger.info(f'-> Entity: {self._entity}')
+        logger.info(f'Starting PositionGoal <{self._name}> with params:')
+        logger.info(f'-> Entity: {self._entity.name}')
+        logger.info(f'-> Position: {self._position}')
+        logger.info(f'-> Deviation: {self._deviation}')
+        logger.info(f'-> Max Duration: {self._max_duration}')
+        logger.info(f'-> Min Duration: {self._min_duration}')
 
     def on_exit(self):
         pass
@@ -110,17 +119,22 @@ class OrientationGoal(Goal):
         super().__init__([entity], event_emitter, name=name,
                          max_duration=max_duration,
                          min_duration=min_duration)
+        self._entity = entity
         self._orientation = orientation
         self._deviation = deviation
 
     def on_enter(self):
         logger.info(f'Starting OrientationGoal <{self._name}> with params:')
-        logger.info(f'-> Entity: {self._entity}')
+        logger.info(f'-> Entity: {self._entity.name}')
+        logger.info(f'-> Orientation: {self._orientation}')
+        logger.info(f'-> Deviation: {self._deviation}')
+        logger.info(f'-> Max Duration: {self._max_duration}')
+        logger.info(f'-> Min Duration: {self._min_duration}')
 
     def on_exit(self):
         pass
 
-    def _on_check_orimessage(self):
+    def check_ori(self):
         if self._last_state.get('orientation', None) is None:
             return
         ori = self._last_state['orientation']

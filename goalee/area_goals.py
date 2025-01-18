@@ -50,12 +50,14 @@ class RectangleAreaGoal(Goal):
         return self._tag
 
     def on_enter(self):
-        self.log_info(f'Starting RectangleAreaGoal <{self._name}> with params:')
-        self.log_info(f'-> Monitoring Entities: {self._entities}')
-        self.log_info(f'-> Bottom Left Edge: {self._bottom_left_edge}')
-        self.log_info(f'-> Length X: {self._length_x}')
-        self.log_info(f'-> Length Y: {self._length_y}')
-        self.log_info(f'-> Strategy: {self._tag.name}')
+        self.log_info(
+            f'Starting RectangleAreaGoal <{self._name}> with params:\n'
+            f'-> Monitoring Entities: {self._entities}\n'
+            f'-> Bottom Left Edge: {self._bottom_left_edge}\n'
+            f'-> Length X: {self._length_x}\n'
+            f'-> Length Y: {self._length_y}\n'
+            f'-> Strategy: {self._tag.name}'
+        )
 
     def on_exit(self):
         pass
@@ -109,11 +111,13 @@ class CircularAreaGoal(Goal):
         pass
 
     def on_enter(self):
-        self.log_info(f'Starting CircularAreaGoal <{self._name}> with params:')
-        self.log_info(f'-> Monitoring Entities: {[e.name for e in self._entities]}')
-        self.log_info(f'-> Center: {self._center}')
-        self.log_info(f'-> Radius: {self._radius}')
-        self.log_info(f'-> Strategy: {self._tag.name}')
+        self.log_info(
+            f'Starting CircularAreaGoal <{self._name}> with params:\n'
+            f'-> Monitoring Entities: {[e.name for e in self._entities]}\n'
+            f'-> Center: {self._center}\n'
+            f'-> Radius: {self._radius}\n'
+            f'-> Strategy: {self._tag.name}'
+        )
 
     def check_area(self):
         for _last_state in self._last_states:

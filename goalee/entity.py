@@ -116,8 +116,10 @@ class Entity:
         # Update state
         for key in new_state:
             if key not in self.attributes:
-                logger.warning(f"Entity <{self.name}> received wrong message: KeyError <{key}>")
-                logger.warning("Dropping message..")
+                logger.warning(
+                    f"Entity <{self.name}> received wrong message: KeyError <{key}>\n"
+                    "Dropping message.."
+                )
                 return
         self._initialized = True
         self.state = new_state
@@ -133,8 +135,10 @@ class Entity:
         # Update attributes
         for key in new_state:
             if key not in self.attributes:
-                logger.warning(f"Entity <{self.name}> received wrong message: KeyError <{key}>")
-                logger.warning("Dropping message..")
+                logger.warning(
+                    f"Entity <{self.name}> received wrong message: KeyError <{key}>\n"
+                    "Dropping message.."
+                )
         for attribute, value in new_state.items():
             # If value is a dictionary, also update the Dict's subattributes/items
             if self.attributes_buff[attribute] is not None:

@@ -37,7 +37,7 @@ class Scenario:
         if self._node is not None:
             self._rtmonitor = RTMonitor(self._node, etopic, ltopic)
         else:
-            logger.warning('Cannot initialize RTMonitor without a communication node')
+            self.log_warning('Cannot initialize RTMonitor without a communication node')
         for goal in self._goals:
             goal.set_rtmonitor(self._rtmonitor)
 
@@ -135,15 +135,16 @@ class Scenario:
         self.start_entities(self._goals)
         for g in self._goals:
             g.enter()
-        logger.info(f"{'=' * 40}")
-        logger.info(f"Scenario '{self._name}' Completed (Sequential Mode)")
-        logger.info(f"{'=' * 40}")
-        logger.info("Results:")
-        for goal_name, goal_status in self.make_result_list():
-            logger.info(f"  - {goal_name}: {'✓' if goal_status else '✗'}")
-        logger.info(f"{'=' * 40}")
-        logger.info(f"Final Score: {self.calc_score():.2f}")
-        logger.info(f"{'=' * 40}")
+        self.log_info(
+            f"{'=' * 40}\n"
+            f"Scenario '{self._name}' Completed (Sequential Mode)\n"
+            f"{'=' * 40}\n"
+            "Results:\n" +
+            "\n".join([f"  - {goal_name}: {'✓' if goal_status else '✗'}" for goal_name, goal_status in self.make_result_list()]) +
+            f"\n{'=' * 40}\n"
+            f"Final Score: {self.calc_score():.2f}\n"
+            f"{'=' * 40}"
+        )
         if self._rtmonitor:
             self.send_scenario_finished("sequential")
             time.sleep(0.1)
@@ -172,15 +173,16 @@ class Scenario:
             future = executor.submit(goal.enter, )
             futures.append(future)
         _ = [f for f in as_completed(futures)]
-        logger.info(f"{'=' * 40}")
-        logger.info(f"Scenario '{self._name}' Completed (Concurrent Mode)")
-        logger.info(f"{'=' * 40}")
-        logger.info("Results:")
-        for goal_name, goal_status in self.make_result_list():
-            logger.info(f"  - {goal_name}: {'✓' if goal_status else '✗'}")
-        logger.info(f"{'=' * 40}")
-        logger.info(f"Final Score: {self.calc_score():.2f}")
-        logger.info(f"{'=' * 40}")
+        self.log_info(
+            f"{'=' * 40}\n"
+            f"Scenario '{self._name}' Completed (Concurrent Mode)\n"
+            f"{'=' * 40}\n"
+            "Results:\n" +
+            "\n".join([f"  - {goal_name}: {'✓' if goal_status else '✗'}" for goal_name, goal_status in self.make_result_list()]) +
+            f"\n{'=' * 40}\n"
+            f"Final Score: {self.calc_score():.2f}\n"
+            f"{'=' * 40}"
+        )
         if self._rtmonitor:
             self.send_scenario_finished("concurrent")
             time.sleep(0.1)
@@ -195,7 +197,7 @@ class Scenario:
             "execution": execution
         }
         event = EventMsg(type="scenario_started", data=msg_data)
-        logger.info(f'Sending scenario finished event: {event}')
+        self.log_info(f'Sending scenario started event: {event}')
         self._rtmonitor.send_event(event)
 
     def send_scenario_finished(self, execution: str):
@@ -208,7 +210,7 @@ class Scenario:
             "execution": execution
         }
         event = EventMsg(type="scenario_finished", data=msg_data)
-        logger.info(f'Sending scenario finished event: {event}')
+        self.log_info(f'Sending scenario finished event: {event}')
         self._rtmonitor.send_event(event)
 
     def make_result_list(self):
@@ -230,3 +232,21 @@ class Scenario:
         res = [goal.status * w for goal,w in zip(self._goals, self._score_weights)]
         res = sum(res)
         return res
+
+    def log_namespace(self):
+        return f"{self.__class__.__name__}:{self.name}"
+
+    def log(self):
+        return logger
+
+    def log_info(self, msg):
+        self.log().info(f"[{self.log_namespace()}] {msg}")
+
+    def log_warning(self, msg):
+        self.log().warning(f"[{self.log_namespace()}] {msg}")
+
+    def log_error(self, msg):
+        self.log().error(f"[{self.log_namespace()}] {msg}")
+
+    def log_debug(self, msg):
+        self.log().debug(f"[{self.log_namespace()}] {msg}")

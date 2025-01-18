@@ -30,12 +30,12 @@ class PoseGoal(Goal):
         self._deviation_ori = deviation_ori
 
     def on_enter(self):
-        logger.info(f'Starting PoseGoal <{self._name}> with params:')
-        logger.info(f'-> Entity: {self._entity.name}')
-        logger.info(f'-> Position: {self._position}')
-        logger.info(f'-> Orientation: {self._orientation}')
-        logger.info(f'-> Deviation Position: {self._deviation_pos}')
-        logger.info(f'-> Deviation Orientation: {self._deviation_ori}')
+        self.log_info(f'Starting PoseGoal <{self._name}> with params:')
+        self.log_info(f'-> Entity: {self._entity.name}')
+        self.log_info(f'-> Position: {self._position}')
+        self.log_info(f'-> Orientation: {self._orientation}')
+        self.log_info(f'-> Deviation Position: {self._deviation_pos}')
+        self.log_info(f'-> Deviation Orientation: {self._deviation_ori}')
 
     def on_exit(self):
         pass
@@ -80,12 +80,12 @@ class PositionGoal(Goal):
         self._deviation = deviation
 
     def on_enter(self):
-        logger.info(f'Starting PositionGoal <{self._name}> with params:')
-        logger.info(f'-> Entity: {self._entity.name}')
-        logger.info(f'-> Position: {self._position}')
-        logger.info(f'-> Deviation: {self._deviation}')
-        logger.info(f'-> Max Duration: {self._max_duration}')
-        logger.info(f'-> Min Duration: {self._min_duration}')
+        self.log_info(f'Starting PositionGoal <{self._name}> with params:')
+        self.log_info(f'-> Entity: {self._entity.name}')
+        self.log_info(f'-> Position: {self._position}')
+        self.log_info(f'-> Deviation: {self._deviation}')
+        self.log_info(f'-> Max Duration: {self._max_duration}')
+        self.log_info(f'-> Min Duration: {self._min_duration}')
 
     def on_exit(self):
         pass
@@ -124,12 +124,12 @@ class OrientationGoal(Goal):
         self._deviation = deviation
 
     def on_enter(self):
-        logger.info(f'Starting OrientationGoal <{self._name}> with params:')
-        logger.info(f'-> Entity: {self._entity.name}')
-        logger.info(f'-> Orientation: {self._orientation}')
-        logger.info(f'-> Deviation: {self._deviation}')
-        logger.info(f'-> Max Duration: {self._max_duration}')
-        logger.info(f'-> Min Duration: {self._min_duration}')
+        self.log_info(f'Starting OrientationGoal <{self._name}> with params:')
+        self.log_info(f'-> Entity: {self._entity.name}')
+        self.log_info(f'-> Orientation: {self._orientation}')
+        self.log_info(f'-> Deviation: {self._deviation}')
+        self.log_info(f'-> Max Duration: {self._max_duration}')
+        self.log_info(f'-> Min Duration: {self._min_duration}')
 
     def on_exit(self):
         pass

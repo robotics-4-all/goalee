@@ -21,7 +21,10 @@ class EntityStateChange(Goal):
         self._last_state = self.entity.attributes.copy()
 
     def on_enter(self):
-        pass
+        self.log_info(f"Starting EntityStateChange Goal {self.name} ")
+        self.log_info(f"Entity: {self.entity.name}")
+        self.log_info(f"Max Duration: {self._max_duration}")
+        self.log_info(f"Min Duration: {self._min_duration}")
 
     def on_exit(self):
         pass
@@ -52,7 +55,10 @@ class EntityStateCondition(Goal):
         return {e.name: e for e in self._entities}
 
     def on_enter(self):
-        pass
+        self.log_info(f"Starting EntiStateCondition Goal {self.name} ")
+        self.log_info(f"Condition: {self._condition}")
+        self.log_info(f"Max Duration: {self._max_duration}")
+        self.log_info(f"Min Duration: {self._min_duration}")
 
     def on_exit(self):
         pass

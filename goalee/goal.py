@@ -102,11 +102,11 @@ class Goal():
                     'elapsed_time': self.get_current_elapsed(),
                 }
         )
-        logger.info(f'Sending goal state change event: {event}')
+        self.log_info(f'Sending goal state change event: {event}')
         self._rtmonitor.send_event(event)
 
     def _report_state(self):
-        logger.info(f'Goal <{self.__class__.__name__}:{self.name}> entered {self.state.name} state ' +
+        self.log_info(f'Goal <{self.__class__.__name__}:{self.name}> entered {self.state.name} state ' +
               f'(maxT={self._max_duration}, minT={self._min_duration})')
 
     def enter(self, rtmonitor: RTMonitor = None):
@@ -178,7 +178,7 @@ class Goal():
             elif elapsed > self._max_duration:
                 self._duration = elapsed
                 self.set_state(GoalState.FAILED)
-                logger.info(
+                self.log_info(
                     f'Goal <{self.__class__.__name__}:{self._name}> exited due' + \
                     f' to timeout after {self._max_duration} seconds!')
                 break
@@ -202,3 +202,21 @@ class Goal():
             str: String representation of the random unique id
         """
         return str(uuid.uuid4()).replace('-', '')
+
+    def log_namespace(self):
+        return f"{self.__class__.__name__}:{self.name}"
+
+    def log(self):
+        return logger
+
+    def log_info(self, msg):
+        self.log().info(f"[{self.log_namespace()}] {msg}")
+
+    def log_warning(self, msg):
+        self.log().warning(f"[{self.log_namespace()}] {msg}")
+
+    def log_error(self, msg):
+        self.log().error(f"[{self.log_namespace()}] {msg}")
+
+    def log_debug(self, msg):
+        self.log().debug(f"[{self.log_namespace()}] {msg}")

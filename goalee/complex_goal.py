@@ -59,13 +59,23 @@ class ComplexGoal(Goal):
         return self.state
 
     def on_enter(self):
+        self.log_info(f'Starting ComplexGoal <{self._name}>:\n'
+                      f"Parameters:\n"
+                      f"  Algorithm: {self._algorithm.name}\n"
+                      f"  X-Accomplished: {self._x_accomplished}\n"
+                      f"Internal Goals: {[f'{g.__class__.__name__}:{g.name}' for g in self._goals]}")
+
         if self._algorithm in (ComplexGoalAlgorithm.ALL_ACCOMPLISHED_ORDERED,
                                ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED_ORDERED):
             self.run_seq()
         else:
             self.run_concurrent()
-        logger.info(f'Finished <{self.__class__.__name__}:{self.name}> - Mode {self._algorithm.name}')
         self.calc_result()
+        self.log_info(
+            f'Finished ComplexGoal <{self.__class__.__name__}:{self._name}>\n'
+            f'-> Mode {self._algorithm.name}\n'
+            f'-> Results: {self._get_results_list()}'
+        )
 
     def run_seq(self):
         for g in self._goals:
@@ -103,7 +113,7 @@ class ComplexGoal(Goal):
 
     def calc_result(self):
         res_list = self._get_results_list()
-        logger.info(f'<{self.__class__.__name__}:{self._name}> results: {res_list}')
+        self.log_info(f'<{self.__class__.__name__}:{self._name}> results: {res_list}')
         completed = res_list.count(1)
         # failed = res_list.count(0)
         self._evaluate_results(completed, res_list)
@@ -161,10 +171,10 @@ class ComplexGoal(Goal):
     def add_goal(self, goal: Goal):
         if (goal._max_duration is None or goal._max_duration > self._max_duration) and self._max_duration is not None:
             goal._max_duration = self._max_duration
-            logger.info(f'Goal <{goal.__class__.__name__}:{goal.name}> max duration set to {self._max_duration}')
+            self.log_info(f'Goal <{goal.__class__.__name__}:{goal.name}> max duration set to {self._max_duration}')
         if (goal._min_duration is None or goal._min_duration < self._min_duration) and self._min_duration is not None:
             goal._min_duration = self._min_duration
-            logger.info(f'Goal <{goal.__class__.__name__}:{goal.name}> min duration set to {self._min_duration}')
+            self.log_info(f'Goal <{goal.__class__.__name__}:{goal.name}> min duration set to {self._min_duration}')
         self._goals.append(goal)
 
     def set_comm_node(self, comm_node: Node):

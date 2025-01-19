@@ -21,7 +21,10 @@ class RemoteLogHandler(logging.Handler):
         super().__init__()
 
     def emit(self, record) -> None:
-        self.rtm.log(record.msg, record.levelname)
+        try:
+            self.rtm.log(record.msg, record.levelname)
+        except Exception as e:
+            logger.error(f'[RTMonitor] Error sending log message: {str(e)}')
 
 
 class RTMonitor:
@@ -39,7 +42,7 @@ class RTMonitor:
         lpub.run()
         self.epub = epub
         self.lpub = lpub
-        # logger.addHandler(RemoteLogHandler(self))
+        logger.addHandler(RemoteLogHandler(self))
         logger.info(f'[RTMonitor]: Initialized topics: events -> {etopic}, logs -> {ltopic}')
 
     def send_event(self, event):

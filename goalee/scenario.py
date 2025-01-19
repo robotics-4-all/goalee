@@ -33,6 +33,16 @@ class Scenario:
     def name(self):
         return self._name
 
+    def print_stats(self):
+        self.log_info(f"Scenario '{self._name}' Statistics:\n"
+                  f"{'=' * 40}\n"
+                  f"Name: {self._name}\n"
+                  f"Broker: {self._broker}\n"
+                  f"Score Weights: {self._score_weights}\n"
+                  f"Goals: {[goal.name for goal in self._goals]}\n"
+                  f"Entities: {[entity.name for entity in self._entities]}\n"
+                  f"{'=' * 40}")
+
     def init_rtmonitor(self, etopic, ltopic):
         if self._node is not None:
             self._rtmonitor = RTMonitor(self._node, etopic, ltopic)
@@ -88,7 +98,6 @@ class Scenario:
             heartbeats=heartbeats,
             debug=False,
         )
-        node.run(wait=True)
         return node
 
     def add_goal(self, goal: Goal):
@@ -133,6 +142,10 @@ class Scenario:
         Returns:
             None
         """
+        self.print_stats()
+        if self._node:
+            self._node.run()
+            time.sleep(0.5)
         if self._rtmonitor:
             self.send_scenario_started("sequential")
         self.start_entities(self._goals)
@@ -166,6 +179,10 @@ class Scenario:
         Returns:
             None
         """
+        self.print_stats()
+        if self._node:
+            self._node.run()
+            time.sleep(0.5)
         if self._rtmonitor:
             self.send_scenario_started("concurrent")
         self.start_entities(self._goals)

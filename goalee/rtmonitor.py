@@ -39,7 +39,7 @@ class RTMonitor:
         lpub.run()
         self.epub = epub
         self.lpub = lpub
-        logger.addHandler(RemoteLogHandler(self))
+        # logger.addHandler(RemoteLogHandler(self))
         logger.info(f'[RTMonitor]: Initialized topics: events -> {etopic}, logs -> {ltopic}')
 
     def send_event(self, event):

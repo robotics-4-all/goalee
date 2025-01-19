@@ -78,7 +78,7 @@ class Entity:
                 host=self.source.host,
                 port=self.source.port,
                 username=self.source.username,
-                password=self.source.password
+                password=self.source.password,
             )
         else:
             raise ValueError('Invalid broker type')

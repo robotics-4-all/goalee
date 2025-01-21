@@ -25,48 +25,75 @@ class PoseMessage(PubSubMessage):
 
 
 class Robot(Node):
-    def __init__(self, name, connection_params, pose_uri, velocity=2,
-                 *args, **kwargs):
+    def __init__(self, name, connection_params, pose_uri, velocity_linear=2,
+                 velocity_angular=0.1, *args, **kwargs):
         self.name = name
         self.pose = PoseMessage()
         self.pose_uri = pose_uri
-        self.velocity = velocity
+        self.velocity_linear = velocity_linear
+        self.velocity_angular = velocity_angular
         super().__init__(node_name=name, connection_params=connection_params,
                          *args, **kwargs)
         self.pose_pub = self.create_publisher(msg_type=PoseMessage,
                                               topic=self.pose_uri)
 
-    def move(self, x, y, interval=0.5):
-        vel = self.velocity
+    def move(self, x, y, interval=0.2):
+        vel = self.velocity_linear
         current_x = self.pose.position['x']
         current_y = self.pose.position['y']
 
         distance = ((x - current_x)**2 + (y - current_y)**2)**0.5
         distance_x = x - current_x
         distance_y = y - current_y
-        steps_x = abs(distance_x) / vel
-        steps_y = abs(distance_y) / vel
-        direction_x = 1 if distance_x > 0 else -1
-        direction_y = 1 if distance_y > 0 else -1
 
-        for _ in range(int(steps_x / interval)):
-            current_x += vel * direction_x * interval
-            distance = ((x - current_x)**2 + (y - current_y)**2)**0.5
-            self.publish_pose(current_x, current_y)
+        steps = int(distance / (vel * interval))
+        step_distance_x = (distance_x / distance) * vel * interval
+        step_distance_y = (distance_y / distance) * vel * interval
+
+        for _ in range(steps):
+            current_x += step_distance_x
+            current_y += step_distance_y
+            self.publish_position(current_x, current_y)
             print(f'Current position: x={current_x:.2f}, y={current_y:.2f}')
-            print(f'Distance to target: {distance:.2f}')
-            time.sleep(interval)
-        for _ in range(int(steps_y / interval)):
-            current_y += vel * direction_y * interval
-            distance = ((x - current_x)**2 + (y - current_y)**2)**0.5
-            self.publish_pose(current_x, current_y)
-            print(f'Current position: x={current_x:.2f}, y={current_y:.2f}')
-            print(f'Distance to target: {distance:.2f}')
             time.sleep(interval)
 
-    def publish_pose(self, x, y):
-        self.pose.x = x
-        self.pose.y = y
+        # Ensure final position is exactly the target position
+        self.publish_position(x, y)
+        print(f'Final position: x={x:.2f}, y={y:.2f}')
+
+    def turn(self, angle, interval=0.2):
+        vel = self.velocity_angular
+        current_yaw = self.pose.orientation['yaw']
+        target_yaw = angle
+        direction = 1 if target_yaw > current_yaw else -1
+
+        distance = abs(target_yaw - current_yaw)
+        steps = int(distance / (vel * interval))
+        step_distance_yaw = direction * vel * interval
+
+        for _ in range(steps):
+            current_yaw += step_distance_yaw
+            self.publish_orientation(current_yaw)
+            print(f'Current orientation: yaw={current_yaw:.2f}')
+            time.sleep(interval)
+
+        # Ensure final orientation is exactly the target angle
+        self.publish_orientation(target_yaw)
+        print(f'Final orientation: yaw={target_yaw:.2f}')
+
+    def publish_orientation(self, yaw):
+        self.pose.orientation['yaw'] = yaw
+        self.pose_pub.publish(self.pose)
+
+    def publish_position(self, x, y):
+        self.pose.position['x'] = x
+        self.pose.position['y'] = y
+        self.pose_pub.publish(self.pose)
+
+    def publish_pose(self, x, y, yaw=0):
+        self.pose.position['x'] = x
+        self.pose.position['y'] = y
+        self.pose.orientation['yaw'] = yaw
         self.pose_pub.publish(self.pose)
 
 

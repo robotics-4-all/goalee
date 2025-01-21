@@ -106,7 +106,7 @@ class Entity:
         self.node.run()
         logger.info(f"Started Entity <{self.name}> listening on topic <{self.topic}>")
 
-    def update_state(self, new_state: Dict[str, Any]) -> None:
+    def update_state(self, new_state: Dict[str, Any], strict: bool = False) -> None:
         """
         Function for updating Entity state. Meant to be used as a callback function by the Entity's subscriber object
         (commlib-py).
@@ -114,34 +114,41 @@ class Entity:
         :return:
         """
         # Update state
-        for key in new_state:
+        state = new_state.copy()
+        for key in state:
             if key not in self.attributes:
                 logger.warning(
-                    f"Entity <{self.name}> received wrong message: KeyError <{key}>\n"
-                    "Dropping message.."
+                    f"Failed to update Entity <{self.name}> state - Message KeyError <{key}>"
                 )
-                return
+                if strict:
+                    logger.warning(f"Entity <{self.name}> in strict mode - Dropping invalid message")
+                    return
+                else:
+                    continue
         self._initialized = True
-        self.state = new_state
+        self.state = state
         # Update attributes based on state
-        self.update_attributes(new_state)
-        self.update_buffers(new_state)
+        self.update_attributes(state)
+        self.update_buffers(state)
 
-    def update_buffers(self, new_state):
+    def update_buffers(self, new_state, strict=False):
         """
         Recursive function used by update_state() mainly to updated
             dictionaries/objects and normal Attributes.
         """
         # Update attributes
-        for key in new_state:
+        state = new_state.copy()
+        for key in state:
             if key not in self.attributes:
                 logger.warning(
-                    f"Entity <{self.name}> received wrong message: KeyError <{key}>\n"
-                    "Dropping message.."
+                    f"Failed to update Entity <{self.name}> state - Message KeyError <{key}>"
                 )
-        for attribute, value in new_state.items():
+                if strict:
+                    logger.warning(f"Entity <{self.name}> in strict mode - Dropping invalid message")
+                    return
+        for attribute, value in state.items():
             # If value is a dictionary, also update the Dict's subattributes/items
-            if self.attributes_buff[attribute] is not None:
+            if attribute in self.attributes and self.attributes_buff[attribute] is not None:
                 self.attributes_buff[attribute].append(value)
 
     def update_attributes(self, new_state):

@@ -98,10 +98,16 @@ class PositionGoal(Goal):
         if self._last_state.get('position', None) is None:
             return
         pos = self._last_state['position']
-        if pos.get('x', 'None') is None or pos.get('y', 'None') is None:
-            return
-        reached = pos > (self._position - self._deviation) and \
-                pos < (self._position + self._deviation)
+        if pos.get('x', 'None') is None and pos.get('y', 'None') is None \
+            and pos.get('z', 'None') is None:
+                self.log_warning('Received invalid position values for x,y,z')
+                return
+        reached = (pos['x'] > (self._position.x - self._deviation) and \
+                   pos['x'] < (self._position.x + self._deviation) and \
+                   pos['y'] > (self._position.y - self._deviation) and \
+                   pos['y'] < (self._position.y + self._deviation) and \
+                   pos['z'] > (self._position.z - self._deviation) and \
+                   pos['z'] < (self._position.z + self._deviation))
         if reached:
             self.set_state(GoalState.COMPLETED)
 
@@ -144,10 +150,15 @@ class OrientationGoal(Goal):
         if self._last_state.get('orientation', None) is None:
             return
         ori = self._last_state['orientation']
-        if ori.get('x', 'None') is None or ori.get('y', 'None') is None:
+        if ori.get('roll', None) is None and ori.get('pitch', None) is None \
+            and ori.get('yaw', None) is None:
             return
-        reached = ori > (self._orientation - self._deviation) and \
-                ori < (self._orientation + self._deviation)
+        reached = (ori['roll'] > (self._orientation.roll - self._deviation) and \
+                   ori['roll'] < (self._orientation.roll + self._deviation) and \
+                   ori['pitch'] > (self._orientation.pitch - self._deviation) and \
+                   ori['pitch'] < (self._orientation.pitch + self._deviation) and \
+                   ori['yaw'] > (self._orientation.yaw - self._deviation) and \
+                   ori['yaw'] < (self._orientation.yaw + self._deviation))
         if reached:
             self.set_state(GoalState.COMPLETED)
 

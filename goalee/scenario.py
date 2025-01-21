@@ -2,9 +2,10 @@ import logging
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from commlib.node import Node
+from goalee.entity import Entity
 from goalee.goal import Goal
 from goalee.brokers import Broker
 from goalee.logging import default_logger as logger
@@ -16,22 +17,29 @@ class Scenario:
                  name: str = "",
                  broker: Optional[Broker] = None,
                  score_weights: Optional[List] = None):
-        self._broker = broker
-        self._rtmonitor = None
+        self._broker: Broker = broker
+        self._rtmonitor: RTMonitor = None
         if name in (None, "") or len(name) == 0:
             name = self.gen_random_name()
-        self._name = name
-        self._score_weights = score_weights
+        self._name: str = name
+        self._score_weights: List[float] = score_weights
         if self._broker is not None:
             self._node = self._create_comm_node(self._broker)
         else:
-            self._node = None
-        self._goals = []
-        self._entities = []
+            self._node: Node = None
+        self._goals: List[Goal] = []
+        self._entities: List[Entity] = []
 
     @property
     def name(self):
         return self._name
+
+    def build_entity_list(self):
+        self._entities = []  # Clear previous entities
+        for goal in self._goals:
+            for entity in goal.entities:
+                if entity not in self._entities:
+                    self._entities.append(entity)
 
     def print_stats(self):
         self.log_info(f"Scenario '{self._name}' Statistics:\n"
@@ -142,6 +150,7 @@ class Scenario:
         Returns:
             None
         """
+        self.build_entity_list()
         self.print_stats()
         if self._node:
             self._node.run()
@@ -151,16 +160,7 @@ class Scenario:
         self.start_entities(self._goals)
         for g in self._goals:
             g.enter()
-        self.log_info(
-            f"{'=' * 40}\n"
-            f"Scenario '{self._name}' Completed (Sequential Mode)\n"
-            f"{'=' * 40}\n"
-            "Results:\n" +
-            "\n".join([f"  - {goal_name}: {'✓' if goal_status else '✗'}" for goal_name, goal_status in self.make_result_list()]) +
-            f"\n{'=' * 40}\n"
-            f"Final Score: {self.calc_score():.2f}\n"
-            f"{'=' * 40}"
-        )
+        self.print_results()
         if self._rtmonitor:
             self.send_scenario_finished("sequential")
             time.sleep(0.1)
@@ -179,6 +179,7 @@ class Scenario:
         Returns:
             None
         """
+        self.build_entity_list()
         self.print_stats()
         if self._node:
             self._node.run()
@@ -193,6 +194,14 @@ class Scenario:
             future = executor.submit(goal.enter, )
             futures.append(future)
         _ = [f for f in as_completed(futures)]
+        self.print_results()
+        if self._rtmonitor:
+            self.send_scenario_finished("concurrent")
+            time.sleep(0.1)
+        if self._node:
+            self._node.stop()
+
+    def print_results(self):
         self.log_info(
             f"{'=' * 40}\n"
             f"Scenario '{self._name}' Completed (Concurrent Mode)\n"
@@ -203,11 +212,6 @@ class Scenario:
             f"Final Score: {self.calc_score():.2f}\n"
             f"{'=' * 40}"
         )
-        if self._rtmonitor:
-            self.send_scenario_finished("concurrent")
-            time.sleep(0.1)
-        if self._node:
-            self._node.stop()
 
     def send_scenario_started(self, execution: str):
         msg_data = {

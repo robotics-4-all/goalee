@@ -21,7 +21,7 @@ class PoseMessage(PubSubMessage):
     position: Dict[str, float] = Field(
         default_factory=lambda: {'x': 0.0, 'y': 0.0, 'z': 0.0})
     orientation: Dict[str, float] = Field(
-        default_factory=lambda: {'x': 0.0, 'y': 0.0, 'z': 0.0})
+        default_factory=lambda: {'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0})
 
 
 class Robot(Node):

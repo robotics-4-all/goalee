@@ -21,11 +21,11 @@ class PoseMessage(PubSubMessage):
     position: Dict[str, float] = Field(
         default_factory=lambda: {'x': 0.0, 'y': 0.0, 'z': 0.0})
     orientation: Dict[str, float] = Field(
-        default_factory=lambda: {'x': 0.0, 'y': 0.0, 'z': 0.0})
+        default_factory=lambda: {'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0})
 
 
 class Robot(Node):
-    def __init__(self, name, connection_params, pose_uri, velocity=0.5,
+    def __init__(self, name, connection_params, pose_uri, velocity=2,
                  *args, **kwargs):
         self.name = name
         self.pose = PoseMessage()
@@ -40,32 +40,33 @@ class Robot(Node):
         vel = self.velocity
         current_x = self.pose.position['x']
         current_y = self.pose.position['y']
+
         distance = ((x - current_x)**2 + (y - current_y)**2)**0.5
         distance_x = x - current_x
         distance_y = y - current_y
-        steps_x = distance_x / vel
-        steps_y = distance_y / vel
-        direction_x = 1 if steps_x > 0 else -1
-        direction_y = 1 if steps_y > 0 else -1
+        steps_x = abs(distance_x) / vel
+        steps_y = abs(distance_y) / vel
+        direction_x = 1 if distance_x > 0 else -1
+        direction_y = 1 if distance_y > 0 else -1
 
         for _ in range(int(steps_x / interval)):
             current_x += vel * direction_x * interval
             distance = ((x - current_x)**2 + (y - current_y)**2)**0.5
             self.publish_pose(current_x, current_y)
-            print(f'Current position: {current_x}, {current_y}')
-            print(f'Distance to target: {distance}')
+            print(f'Current position: x={current_x:.2f}, y={current_y:.2f}')
+            print(f'Distance to target: {distance:.2f}')
             time.sleep(interval)
         for _ in range(int(steps_y / interval)):
             current_y += vel * direction_y * interval
             distance = ((x - current_x)**2 + (y - current_y)**2)**0.5
             self.publish_pose(current_x, current_y)
-            print(f'Current position: {current_x}, {current_y}')
-            print(f'Distance to target: {distance}')
+            print(f'Current position: x={current_x:.2f}, y={current_y:.2f}')
+            print(f'Distance to target: {distance:.2f}')
             time.sleep(interval)
 
     def publish_pose(self, x, y):
-        self.pose.position['x'] = x
-        self.pose.position['y'] = y
+        self.pose.x = x
+        self.pose.y = y
         self.pose_pub.publish(self.pose)
 
 

@@ -10,13 +10,15 @@ class Entity:
     def __init__(self, name: str, etype: str, topic: str,
                  attributes: List[str], source=None,
                  init_buffers: bool = False,
-                 buffer_length: int = 10) -> None:
+                 buffer_length: int = 10,
+                 strict_mode: bool = False) -> None:
         # Entity name
         self.name = name
         self.camel_name = self.to_camel_case(name)
         self.etype = etype
         # MQTT topic for Entity
         self.topic = topic
+        self._strict = strict_mode
         # Entity state
         self.state = None
         # Set Entity's MQTT Broker
@@ -106,7 +108,7 @@ class Entity:
         self.node.run()
         logger.info(f"Started Entity <{self.name}> listening on topic <{self.topic}>")
 
-    def update_state(self, new_state: Dict[str, Any], strict: bool = False) -> None:
+    def update_state(self, new_state: Dict[str, Any]) -> None:
         """
         Function for updating Entity state. Meant to be used as a callback function by the Entity's subscriber object
         (commlib-py).
@@ -117,10 +119,10 @@ class Entity:
         state = new_state.copy()
         for key in state:
             if key not in self.attributes:
-                logger.warning(
-                    f"Failed to update Entity <{self.name}> state - Message KeyError <{key}>"
-                )
-                if strict:
+                # logger.warning(
+                #     f"Entity <{self.name}> state - Message KeyError <{key}>\n"
+                # )
+                if self._strict:
                     logger.warning(f"Entity <{self.name}> in strict mode - Dropping invalid message")
                     return
                 else:
@@ -131,7 +133,7 @@ class Entity:
         self.update_attributes(state)
         self.update_buffers(state)
 
-    def update_buffers(self, new_state, strict=False):
+    def update_buffers(self, new_state):
         """
         Recursive function used by update_state() mainly to updated
             dictionaries/objects and normal Attributes.
@@ -139,13 +141,9 @@ class Entity:
         # Update attributes
         state = new_state.copy()
         for key in state:
-            if key not in self.attributes:
-                logger.warning(
-                    f"Failed to update Entity <{self.name}> state - Message KeyError <{key}>"
-                )
-                if strict:
-                    logger.warning(f"Entity <{self.name}> in strict mode - Dropping invalid message")
-                    return
+            if self._strict and key not in self.attributes:
+                logger.warning(f"Entity <{self.name}> in strict mode - Dropping invalid message")
+                return
         for attribute, value in state.items():
             # If value is a dictionary, also update the Dict's subattributes/items
             if attribute in self.attributes and self.attributes_buff[attribute] is not None:

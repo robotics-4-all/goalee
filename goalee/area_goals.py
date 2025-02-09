@@ -32,12 +32,14 @@ class RectangleAreaGoal(Goal):
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None,
+                 for_duration: Optional[float] = None,
                  tick_interval: Optional[float] = 0.1):
         super().__init__(entities,
                          event_emitter,
                          name=name,
                          max_duration=max_duration,
                          min_duration=min_duration,
+                         for_duration=for_duration,
                          tick_freq=int(1.0 / tick_interval))
         self._bottom_left_edge = bottom_left_edge
         self._length_x = length_x
@@ -94,10 +96,16 @@ class CircularAreaGoal(Goal):
                  name: Optional[str] = None,
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None):
-        super().__init__(entities,event_emitter, name=name,
+                 min_duration: Optional[float] = None,
+                 for_duration: Optional[float] = None,
+                 tick_interval: Optional[float] = 0.1):
+        super().__init__(entities,
+                         event_emitter,
+                         name=name,
                          max_duration=max_duration,
-                         min_duration=min_duration)
+                         min_duration=min_duration,
+                         for_duration=for_duration,
+                         tick_freq=int(1.0 / tick_interval))
         self._center = center
         self._radius = radius
         self._tag = tag
@@ -156,7 +164,9 @@ class MovingAreaGoal(Goal):
                  name: Optional[str] = None,
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None):
+                 min_duration: Optional[float] = None,
+                 for_duration: Optional[float] = None,
+                 tick_interval: Optional[float] = 0.1):
         """
         Initializes an AreaGoal instance.
 
@@ -172,9 +182,13 @@ class MovingAreaGoal(Goal):
         """
         self._mentity = motion_entity
         entities.remove(motion_entity) if motion_entity in entities else None
-        super().__init__(entities,event_emitter, name=name,
+        super().__init__(entities,
+                         event_emitter,
+                         name=name,
                          max_duration=max_duration,
-                         min_duration=min_duration)
+                         min_duration=min_duration,
+                         for_duration=for_duration,
+                         tick_freq=int(1.0 / tick_interval))
         self._radius = radius
         self._tag = tag
         self._last_states = [entity.state for entity in self._entities]

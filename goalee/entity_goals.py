@@ -11,12 +11,14 @@ class EntityStateChange(Goal):
                  name: Optional[str] = None,
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None):
+                 min_duration: Optional[float] = None,
+                 for_duration: Optional[float] = None):
         super().__init__([entity],
                          event_emitter,
                          name=name,
                          max_duration=max_duration,
-                         min_duration=min_duration)
+                         min_duration=min_duration,
+                         for_duration=for_duration)
         self.entity = entity
         self._last_state = self.entity.attributes.copy()
 
@@ -33,7 +35,13 @@ class EntityStateChange(Goal):
 
     def tick(self):
         if self._last_state != self.entity.attributes:
-            self.set_state(GoalState.COMPLETED)
+            if self._for_duration is not None and self._for_duration > 0:
+                self._ts_hold = self.get_current_ts()
+            else:
+                self.set_state(GoalState.COMPLETED)
+        elif self._ts_hold is not None and self._for_duration is not None:
+            if self.get_current_ts() - self._ts_hold > self._for_duration:
+                self.set_state(GoalState.COMPLETED)
         self._last_state = self.entity.attributes.copy()
 
 
@@ -45,12 +53,14 @@ class EntityStateCondition(Goal):
                  event_emitter: Optional[Any] = None,
                  condition: Optional[Callable] = None,
                  max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None):
+                 min_duration: Optional[float] = None,
+                 for_duration: Optional[float] = None):
         super().__init__(entities,
                          event_emitter,
                          name=name,
                          max_duration=max_duration,
-                         min_duration=min_duration)
+                         min_duration=min_duration,
+                         for_duration=for_duration)
         self._condition = condition
 
     def get_entities_map(self):
@@ -63,6 +73,7 @@ class EntityStateCondition(Goal):
             f"Max Duration: {self._max_duration}\n"
             f"Min Duration: {self._min_duration}"
         )
+        self._ts_hold = -1.0
 
     def on_exit(self):
         pass
@@ -70,12 +81,6 @@ class EntityStateCondition(Goal):
     def tick(self):
         """
         Evaluates the condition of the goal and updates its state accordingly.
-
-        This method checks the type of the condition and evaluates it based on its type:
-        - If the condition is a lambda function, it evaluates the lambda with the entities map.
-        - If the condition is any callable, it evaluates the callable with the entities map.
-        - If the condition is a string, it evaluates the condition as a string expression.
-
         If the condition evaluates to True, the goal state is set to COMPLETED.
 
         Exceptions:
@@ -93,10 +98,17 @@ class EntityStateCondition(Goal):
             elif isinstance(self._condition, str):
                 cond_state = self.evaluate_condition(self.get_entities_map())
             if cond_state:
-                self.set_state(GoalState.COMPLETED)
+                if self._for_duration is not None and self._for_duration > 0:
+                    if self._ts_hold is None or self._ts_hold < 0:
+                        self._ts_hold = self.get_current_ts()
+                    elif self.get_current_ts() - self._ts_hold > self._for_duration:
+                        self.set_state(GoalState.COMPLETED)
+                else:
+                    self.set_state(GoalState.COMPLETED)
+            else:
+                self._ts_hold = -1.0
         except TypeError as e:
             pass
-
 
     def evaluate_condition(self, entities):
         """

@@ -24,12 +24,14 @@ class Goal():
                  name: Optional[str] = None,
                  tick_freq: Optional[int] = 10,  # hz
                  max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None):
+                 min_duration: Optional[float] = None,
+                 for_duration: Optional[float] = None):
         self._rtmonitor: RTMonitor = None
         self._state = None
         self._ee = event_emitter
         self._max_duration: float = max_duration
         self._min_duration: float = min_duration
+        self._for_duration: float = for_duration
         self._duration: float = -1.0
         if name in (None, ""):
             name = self._gen_random_name()
@@ -37,6 +39,7 @@ class Goal():
         self._freq: int = tick_freq
         self._entities: List = entities if entities is not None else []
         self._ts_start: float = -1.0
+        self._ts_hold: float = -1.0
         self.set_state(GoalState.IDLE)
 
     def serialize(self):
@@ -220,3 +223,6 @@ class Goal():
 
     def log_debug(self, msg):
         self.log().debug(f"[{self.log_namespace()}] {msg}")
+
+    def get_current_ts_ms(self):
+        return int(time.time() * 1000)

@@ -77,9 +77,19 @@ class RectangleAreaGoal(Goal):
                     and pos['y'] > self._bottom_left_edge.y)
             reached = x_axis and y_axis
             if reached and self.tag == AreaGoalTag.ENTER:
-                self.set_state(GoalState.COMPLETED)
-            elif not reached and self.tag == AreaGoalTag.AVOID:
-                self.set_state(GoalState.FAILED)
+                if self._for_duration is not None and self._for_duration > 0:
+                    if self._ts_hold is None or self._ts_hold < 0:
+                        self._ts_hold = self.get_current_ts()
+                    elif self.get_current_ts() - self._ts_hold > self._for_duration:
+                        self.set_state(GoalState.COMPLETED)
+            elif reached and self.tag == AreaGoalTag.AVOID:
+                if self._for_duration is not None and self._for_duration > 0:
+                    if self._ts_hold is None or self._ts_hold < 0:
+                        self._ts_hold = self.get_current_ts()
+                    elif self.get_current_ts() - self._ts_hold > self._for_duration:
+                        self.set_state(GoalState.FAILED)
+            else:
+                self._ts_hold = -1.0
 
     def tick(self):
         self._last_states = [entity.attributes.copy() for entity in self._entities]
@@ -137,10 +147,19 @@ class CircularAreaGoal(Goal):
             dist = self._calc_distance(pos)
             reached = dist <= self._radius
             if reached and self.tag == AreaGoalTag.ENTER:
-                # inside the circle
-                self.set_state(GoalState.COMPLETED)
-            elif not reached and self.tag == AreaGoalTag.AVOID:
-                self.set_state(GoalState.FAILED)
+                if self._for_duration is not None and self._for_duration > 0:
+                    if self._ts_hold is None or self._ts_hold < 0:
+                        self._ts_hold = self.get_current_ts()
+                    elif self.get_current_ts() - self._ts_hold > self._for_duration:
+                        self.set_state(GoalState.COMPLETED)
+            elif reached and self.tag == AreaGoalTag.AVOID:
+                if self._for_duration is not None and self._for_duration > 0:
+                    if self._ts_hold is None or self._ts_hold < 0:
+                        self._ts_hold = self.get_current_ts()
+                    elif self.get_current_ts() - self._ts_hold > self._for_duration:
+                        self.set_state(GoalState.FAILED)
+            else:
+                self._ts_hold = -1.0
 
     def _calc_distance(self, pos):
         d = math.sqrt(
@@ -233,10 +252,19 @@ class MovingAreaGoal(Goal):
             dist = self._calc_distance(pos)
             reached = dist <= self._radius
             if reached and self.tag == AreaGoalTag.ENTER:
-                # inside the circle
-                self.set_state(GoalState.COMPLETED)
+                if self._for_duration is not None and self._for_duration > 0:
+                    if self._ts_hold is None or self._ts_hold < 0:
+                        self._ts_hold = self.get_current_ts()
+                    elif self.get_current_ts() - self._ts_hold > self._for_duration:
+                        self.set_state(GoalState.COMPLETED)
             elif not reached and self.tag == AreaGoalTag.AVOID:
-                self.set_state(GoalState.FAILED)
+                if self._for_duration is not None and self._for_duration > 0:
+                    if self._ts_hold is None or self._ts_hold < 0:
+                        self._ts_hold = self.get_current_ts()
+                    elif self.get_current_ts() - self._ts_hold > self._for_duration:
+                        self.set_state(GoalState.FAILED)
+            else:
+                self._ts_hold = -1.0
 
     def _calc_distance(self, pos):
         d = math.sqrt(

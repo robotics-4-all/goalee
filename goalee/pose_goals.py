@@ -121,7 +121,6 @@ class OrientationGoal(Goal):
                  entity: Entity,
                  orientation: Orientation,
                  deviation: float = 0.0,
-                 comm_node: Optional[Node] = None,
                  name: Optional[str] = None,
                  event_emitter: Optional[Any] = None,
                  max_duration: Optional[float] = None,

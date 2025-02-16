@@ -54,7 +54,7 @@ class RectangleAreaGoal(Goal):
     def on_enter(self):
         self.log_info(
             f'Starting RectangleAreaGoal <{self._name}> with params:\n'
-            f'-> Monitoring Entities: {self._entities}\n'
+            f'-> Monitoring Entities: {[e.name for e in self._entities]}\n'
             f'-> Bottom Left Edge: {self._bottom_left_edge}\n'
             f'-> Length X: {self._length_x}\n'
             f'-> Length Y: {self._length_y}\n'
@@ -80,14 +80,20 @@ class RectangleAreaGoal(Goal):
                 if self._for_duration is not None and self._for_duration > 0:
                     if self._ts_hold is None or self._ts_hold < 0:
                         self._ts_hold = self.get_current_ts()
+                        self.log_info(f'Entering FOR_TIME phase: {self._for_duration} seconds')
                     elif self.get_current_ts() - self._ts_hold > self._for_duration:
+                        self.log_info(f'Closing FOR_TIME phase: {self._for_duration} seconds')
                         self.set_state(GoalState.COMPLETED)
+                else:
+                    self.set_state(GoalState.COMPLETED)
             elif reached and self.tag == AreaGoalTag.AVOID:
                 if self._for_duration is not None and self._for_duration > 0:
                     if self._ts_hold is None or self._ts_hold < 0:
                         self._ts_hold = self.get_current_ts()
                     elif self.get_current_ts() - self._ts_hold > self._for_duration:
                         self.set_state(GoalState.FAILED)
+                else:
+                    self.set_state(GoalState.FAILED)
             else:
                 self._ts_hold = -1.0
 
@@ -152,12 +158,16 @@ class CircularAreaGoal(Goal):
                         self._ts_hold = self.get_current_ts()
                     elif self.get_current_ts() - self._ts_hold > self._for_duration:
                         self.set_state(GoalState.COMPLETED)
+                else:
+                    self.set_state(GoalState.COMPLETED)
             elif reached and self.tag == AreaGoalTag.AVOID:
                 if self._for_duration is not None and self._for_duration > 0:
                     if self._ts_hold is None or self._ts_hold < 0:
                         self._ts_hold = self.get_current_ts()
                     elif self.get_current_ts() - self._ts_hold > self._for_duration:
                         self.set_state(GoalState.FAILED)
+                else:
+                    self.set_state(GoalState.FAILED)
             else:
                 self._ts_hold = -1.0
 
@@ -257,12 +267,16 @@ class MovingAreaGoal(Goal):
                         self._ts_hold = self.get_current_ts()
                     elif self.get_current_ts() - self._ts_hold > self._for_duration:
                         self.set_state(GoalState.COMPLETED)
+                else:
+                    self.set_state(GoalState.COMPLETED)
             elif not reached and self.tag == AreaGoalTag.AVOID:
                 if self._for_duration is not None and self._for_duration > 0:
                     if self._ts_hold is None or self._ts_hold < 0:
                         self._ts_hold = self.get_current_ts()
                     elif self.get_current_ts() - self._ts_hold > self._for_duration:
                         self.set_state(GoalState.FAILED)
+                else:
+                    self.set_state(GoalState.FAILED)
             else:
                 self._ts_hold = -1.0
 

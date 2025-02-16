@@ -46,6 +46,9 @@ class Entity:
             buffer = list(self.attributes_buff[attr_name])[-size:]
         return buffer
 
+    def get_attr(self, attr_name: str) -> Any:
+        return self.attributes[attr_name]
+
     def init_attr_buffer(self, attr_name, size):
         self.attributes_buff[attr_name] = deque(maxlen=size)
         # self.attributes_buff[attr_name].extend([0] * size)
@@ -116,6 +119,7 @@ class Entity:
         :return:
         """
         # Update state
+        # logger.info(f'[Entity {self.name}] State Change')
         state = new_state.copy()
         for key in state:
             if key not in self.attributes:

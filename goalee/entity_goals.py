@@ -93,7 +93,7 @@ class EntityStateCondition(Goal):
             if isinstance(self._condition, type(lambda: None)):
                 e = self.get_entities_map()
                 cond_state = self._condition(e)
-            if callable(self._condition):
+            elif callable(self._condition):
                 cond_state = self._condition(self.get_entities_map())
             elif isinstance(self._condition, str):
                 cond_state = self.evaluate_condition(self.get_entities_map())

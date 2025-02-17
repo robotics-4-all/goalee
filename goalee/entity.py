@@ -37,6 +37,11 @@ class Entity:
     def initialized(self):
         return self._initialized
 
+    def __getitem__(self, key):
+        # Allow dictionary-style access to attributes
+        # return getattr(self, key)
+        return self.attributes[key]
+
     def get_buffer(self, attr_name: str, size: int = None):
         size = size if size is not None else self.attributes_buff[attr_name].maxlen
         if len(self.attributes_buff[attr_name]) != \

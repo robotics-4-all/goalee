@@ -16,7 +16,7 @@ class GoalState(IntEnum):
     FAILED = 3
 
 
-class Goal():
+class Goal:
 
     def __init__(self,
                  entities: Optional[List[Entity]] = None,
@@ -112,7 +112,7 @@ class Goal():
         self.log_info(f'Goal <{self.__class__.__name__}:{self.name}> entered {self.state.name} state ' +
               f'(maxT={self._max_duration}, minT={self._min_duration})')
 
-    def enter(self, rtmonitor: RTMonitor = None):
+    def enter(self, rtmonitor: RTMonitor = None, scenario = None):
         """
         Enter the goal, set its state to RUNNING, and execute it until it exits.
 
@@ -135,6 +135,8 @@ class Goal():
         self.set_state(GoalState.RUNNING)
         self.on_enter()
         self.run_until_exit()
+        if scenario is not None:
+            scenario.send_scenario_update()
         return self.state
 
     def get_current_ts(self):

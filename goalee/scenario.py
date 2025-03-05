@@ -159,7 +159,7 @@ class Scenario:
             self.send_scenario_started("sequential")
         self.start_entities(self._goals)
         for g in self._goals:
-            g.enter()
+            g.enter(scenario=self)
         self.print_results()
         if self._rtmonitor:
             self.send_scenario_finished("sequential")
@@ -191,9 +191,9 @@ class Scenario:
         futures = []
         executor = ThreadPoolExecutor(n_threads)
         for goal in self._goals:
-            future = executor.submit(goal.enter, )
+            future = executor.submit(goal.enter, scenario=self)
             futures.append(future)
-        _ = [f for f in as_completed(futures)]
+        res = [f for f in as_completed(futures)]
         self.print_results()
         if self._rtmonitor:
             self.send_scenario_finished("concurrent")
@@ -217,11 +217,23 @@ class Scenario:
         msg_data = {
             "name": self._name,
             "goals": [g.serialize() for g in self._goals],
+            "score": self.calc_score(),
             "weights": self._score_weights,
             "execution": execution
         }
         event = EventMsg(type="scenario_started", data=msg_data)
         self.log_info(f'Sending scenario started event: {event}')
+        self._rtmonitor.send_event(event)
+
+    def send_scenario_update(self):
+        msg_data = {
+            "name": self._name,
+            "goals": [g.serialize() for g in self._goals],
+            "score": self.calc_score(),
+            "weights": self._score_weights,
+        }
+        event = EventMsg(type="scenario_update", data=msg_data)
+        self.log_info(f'Sending scenario update event: {event}')
         self._rtmonitor.send_event(event)
 
     def send_scenario_finished(self, execution: str):

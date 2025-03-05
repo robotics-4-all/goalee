@@ -37,10 +37,10 @@ if __name__ == '__main__':
     scenario = Scenario("Scenario_1", broker)
 
     g1 = EntityStateChange(entity=FrontSonar,
-                           max_duration=30.0)
+                           max_duration=15.0)
     g2 = EntityStateCondition(
         entities=[FrontSonar],
-        max_duration=30.0,
+        max_duration=5.0,
         for_duration=5,
         condition=lambda entities: True if
         entities['front_sonar'].attributes['range'] > 5 else False
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     FrontSonar.init_attr_buffer("range", 10)
     g3 = EntityStateCondition(
         entities=[FrontSonar],
-        max_duration=30.0,
+        max_duration=10.0,
         condition=lambda entities: True if
         mean(entities['front_sonar'].get_buffer('range', 5)) > 5 else False
     )

@@ -42,14 +42,14 @@ if __name__ == '__main__':
         entities=[FrontSonar],
         max_duration=10.0,
         condition=lambda entities: True if
-        entities['front_sonar'].attributes['range'] > 5 else False
+            entities['front_sonar'].attributes['range'] > 5 else False
     )
     FrontSonar.init_attr_buffer("range", 10)
     g3 = EntityStateCondition(
         entities=[FrontSonar],
         max_duration=10.0,
         condition=lambda entities: True if
-        mean(entities['front_sonar'].get_buffer('range', 5)) > 5 else False
+            mean(entities['front_sonar'].get_buffer('range', 5)) > 5 else False
     )
     scenario.add_goal(g1)
     scenario.add_goal(g2)
@@ -57,4 +57,4 @@ if __name__ == '__main__':
     etopic = f'monitor.{scenario.name}.event'
     ltopic = f'monitor.{scenario.name}.log'
     scenario.init_rtmonitor(etopic, ltopic)
-    scenario.run_concurrent()
+    scenario.run_seq()

@@ -57,7 +57,7 @@ if __name__ == '__main__':
     g1 = MovingAreaGoal(motion_entity=Robot1Pose,
                         entities=[Robot2Pose],
                         radius=2.0,
-                        max_duration=60.0,
+                        max_duration=10.0,
                         tag=AreaGoalTag.AVOID)
     t.add_goal(g1)
     etopic = f'monitor.{t.name}.event'

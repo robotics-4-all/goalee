@@ -6,7 +6,7 @@ from typing import Any, List, Optional
 
 from commlib.node import Node
 from goalee.entity import Entity
-from goalee.goal import Goal
+from goalee.goal import Goal, GoalState
 from goalee.brokers import Broker
 from goalee.logging import default_logger as logger
 from goalee.rtmonitor import RTMonitor, EventMsg
@@ -16,7 +16,10 @@ class Scenario:
     def __init__(self,
                  name: str = "",
                  broker: Optional[Broker] = None,
-                 score_weights: Optional[List] = None):
+                 score_weights: Optional[List] = None,
+                 goals: Optional[List[Goal]] = [],
+                 anti_goals: Optional[List[Goal]] = [],
+                 fatal_goals: Optional[List[Goal]] = []):
         self._broker: Broker = broker
         self._rtmonitor: RTMonitor = None
         if name in (None, "") or len(name) == 0:
@@ -27,8 +30,13 @@ class Scenario:
             self._node = self._create_comm_node(self._broker)
         else:
             self._node: Node = None
-        self._goals: List[Goal] = []
+        self._goals: List[Goal] = goals
+        self._anti_goals: List[Goal] = anti_goals
+        self._fatal_goals: List[Goal] = fatal_goals
         self._entities: List[Entity] = []
+
+        n_threads = len(self._fatal_goals + self._goals + self._anti_goals) + 1
+        self._thread_executor = ThreadPoolExecutor(n_threads)
 
     @property
     def name(self):
@@ -157,16 +165,29 @@ class Scenario:
             time.sleep(0.5)
         if self._rtmonitor:
             self.send_scenario_started("sequential")
+
         self.start_entities(self._goals)
+
+        self.start_fatal_goals()
+
         for g in self._goals:
             g.enter()
             self.send_scenario_update("sequential")
+            _break = False
+            for f in self._fatal_goals:
+                if f.state in (GoalState.TERMINATED, GoalState.COMPLETED):
+                    _break = True
+                    break
+            if _break:
+                break
         self.print_results()
         if self._rtmonitor:
             self.send_scenario_finished("sequential")
             time.sleep(0.1)
         if self._node:
             self._node.stop()
+
+        self.stop_thread_executor()
 
     def run_concurrent(self) -> None:
         """
@@ -183,14 +204,17 @@ class Scenario:
         if self._node:
             self._node.run()
             time.sleep(0.5)
+
         if self._rtmonitor:
             self.send_scenario_started("concurrent")
+
         self.start_entities(self._goals)
-        n_threads = len(self._goals)
+
+        self.start_fatal_goals()
+
         futures = []
-        executor = ThreadPoolExecutor(n_threads)
         for goal in self._goals:
-            future = executor.submit(goal.enter, )
+            future = self._thread_executor.submit(goal.enter, )
             futures.append(future)
         for f in as_completed(futures):
             try:
@@ -198,13 +222,37 @@ class Scenario:
                 self.send_scenario_update("concurrent")
             except Exception as e:
                 self.log_error(f"Error in goal execution: {e}")
-        executor.shutdown(wait=False, cancel_futures=True)
+
         self.print_results()
         if self._rtmonitor:
             self.send_scenario_finished("concurrent")
             time.sleep(0.1)
         if self._node:
             self._node.stop()
+
+        self.stop_thread_executor()
+
+    def start_fatal_goals(self):
+        futures = []
+        for goal in self._fatal_goals:
+            future = self._thread_executor.submit(goal.enter, )
+            futures.append(future)
+        for f in as_completed(futures):
+            try:
+                goal = f.result()
+                self.log_error(f"Fatal Goal <{goal.name}> exited with state: {goal.state}")
+                # if goal.state in (GoalState.TERMINATED, GoalState.COMPLETED):
+                break
+            except Exception as e:
+                self.log_error(f"Error in fatal goal execution: {e}")
+
+        self.stop_thread_executor()
+
+    def stop_thread_executor(self):
+        try:
+            self._thread_executor.shutdown(wait=False, cancel_futures=True)
+        except Exception:
+            pass
 
     def print_results(self):
         self.log_info(

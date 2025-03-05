@@ -10,10 +10,11 @@ from goalee.rtmonitor import RTMonitor, EventMsg
 
 
 class GoalState(IntEnum):
-    IDLE = 0
-    RUNNING = 1
-    COMPLETED = 2
-    FAILED = 3
+    IDLE = 0  # Goal is not running
+    RUNNING = 1  # Goal is currently running
+    COMPLETED = 2  # Goal successfully achieved its objective
+    FAILED = 3  # Goal failed to achieve its objective
+    TERMINATED = 4  # Goal was terminated by an external event
 
 
 class Goal:
@@ -135,7 +136,7 @@ class Goal:
         self.set_state(GoalState.RUNNING)
         self.on_enter()
         self.run_until_exit()
-        return self.state
+        return self
 
     def get_current_ts(self):
         return time.time()
@@ -173,7 +174,7 @@ class Goal:
             - If `_max_duration` is None or 0, the goal can run indefinitely until it reaches a terminal state.
             - If `_min_duration` is None or 0, there is no minimum duration constraint for the goal.
         """
-        while self._state not in (GoalState.COMPLETED, GoalState.FAILED):
+        while self._state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
             self.tick()
             elapsed = self.get_current_elapsed()
             if self._max_duration in (None, 0):

@@ -160,6 +160,7 @@ class Scenario:
         self.start_entities(self._goals)
         for g in self._goals:
             g.enter()
+            self.send_scenario_update("sequential")
         self.print_results()
         if self._rtmonitor:
             self.send_scenario_finished("sequential")

@@ -177,8 +177,6 @@ class Scenario:
         The method waits for all tasks to complete, logs the completion of the scenario, calculates the
         score, and logs the results and score.
 
-        Returns:
-            None
         """
         self.build_entity_list()
         self.print_stats()
@@ -195,9 +193,12 @@ class Scenario:
             future = executor.submit(goal.enter, )
             futures.append(future)
         for f in as_completed(futures):
-            f.result()
-            self.send_scenario_update("concurrent")
-        # res = [f for f in as_completed(futures)]
+            try:
+                f.result()
+                self.send_scenario_update("concurrent")
+            except Exception as e:
+                self.log_error(f"Error in goal execution: {e}")
+        executor.shutdown(wait=False, cancel_futures=True)
         self.print_results()
         if self._rtmonitor:
             self.send_scenario_finished("concurrent")

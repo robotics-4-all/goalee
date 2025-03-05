@@ -36,8 +36,10 @@ if __name__ == '__main__':
 
     scenario = Scenario("Scenario_1", broker)
 
-    g1 = EntityStateChange(entity=FrontSonar,
-                           max_duration=15.0)
+    g1 = EntityStateChange(
+        entity=FrontSonar,
+        max_duration=15.0
+    )
     g2 = EntityStateCondition(
         entities=[FrontSonar],
         max_duration=5.0,

@@ -120,16 +120,6 @@ class Goal:
         """
         Enter the goal, set its state to RUNNING, and execute it until it exits.
 
-        This method performs the following steps:
-        1. Logs the entry into the goal.
-        2. Sets the goal's state to RUNNING.
-        3. Calls the on_enter() method.
-        4. Runs the goal until it exits.
-        5. Determines the status based on the goal's final state.
-        6. Logs the exit status of the goal.
-        7. Sets the internal status attribute based on the goal's final state.
-        8. Returns the final state of the goal.
-
         Returns:
             GoalState: The final state of the goal after execution.
         """

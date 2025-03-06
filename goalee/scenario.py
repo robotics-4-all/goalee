@@ -166,7 +166,7 @@ class Scenario:
         if self._rtmonitor:
             self.send_scenario_started("sequential")
 
-        self.start_entities(self._goals)
+        self.start_entities(self._goals + self._anti_goals + self._fatal_goals)
 
         self.start_fatal_goals()
 
@@ -187,6 +187,7 @@ class Scenario:
         if self._node:
             self._node.stop()
 
+        self.terminate_fatal_goals()
         self.stop_thread_executor()
 
     def run_concurrent(self) -> None:
@@ -231,6 +232,7 @@ class Scenario:
         if self._node:
             self._node.stop()
 
+        self.terminate_fatal_goals()
         self.stop_thread_executor()
 
     def start_fatal_goals(self):
@@ -241,6 +243,11 @@ class Scenario:
         for future in futures:
             # future.add_done_callback(lambda f: self.log_error(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state}"))
             future.add_done_callback(self.on_fatal)
+
+    def terminate_fatal_goals(self):
+        for goal in self._fatal_goals:
+            if goal.state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
+                goal.terminate()
 
     def terminate_all_goals(self, failed=False):
         for goal in self._goals:

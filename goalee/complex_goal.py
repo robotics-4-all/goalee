@@ -95,9 +95,6 @@ class ComplexGoal(Goal):
         If a TimeoutError occurs during the execution, it is caught and ignored.
 
         The thread pool is shut down after all tasks are completed or if an exception occurs.
-
-        Returns:
-            list: A list of results from the 'enter' method of each goal.
         """
         n_threads = len(self._goals)
         futures = []

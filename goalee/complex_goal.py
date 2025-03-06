@@ -14,7 +14,7 @@ class ComplexGoalAlgorithm(IntEnum):
     ALL_ACCOMPLISHED = 0
     ALL_ACCOMPLISHED_ORDERED = 1
     NONE_ACCOMPLISHED = 2
-    AT_LEAST_ONE_ACCOMPLISED = 3
+    AT_LEAST_ONE_ACCOMPLISHED = 3
     EXACTLY_X_ACCOMPLISHED = 4
     EXACTLY_X_ACCOMPLISHED_ORDERED = 4
 
@@ -100,13 +100,20 @@ class ComplexGoal(Goal):
             list: A list of results from the 'enter' method of each goal.
         """
         n_threads = len(self._goals)
-        features = []
+        futures = []
         executor = ThreadPoolExecutor(n_threads)
         for goal in self._goals:
             feature = executor.submit(goal.enter, )
-            features.append(feature)
+            futures.append(feature)
         try:
-            results = [future.result() for future in as_completed(features, timeout=self._max_duration)]
+            # results = [future.result() for future in as_completed(futures, timeout=self._max_duration)]
+            for f in as_completed(futures, timeout=self._max_duration):
+                try:
+                    gstate = f.result()
+                    if gstate == GoalState.COMPLETED and self._algorithm == ComplexGoalAlgorithm.AT_LEAST_ONE_ACCOMPLISHED:
+                        break
+                except Exception as e:
+                    self.log_error(f"Error in goal execution: {e}")
         except TimeoutError:
             pass
         executor.shutdown(wait=False, cancel_futures=True)
@@ -132,7 +139,7 @@ class ComplexGoal(Goal):
             self._set_state_all_accomplished(completed, res_list)
         elif self._algorithm == ComplexGoalAlgorithm.NONE_ACCOMPLISHED:
             self._set_state_none_accomplished(completed)
-        elif self._algorithm == ComplexGoalAlgorithm.AT_LEAST_ONE_ACCOMPLISED:
+        elif self._algorithm == ComplexGoalAlgorithm.AT_LEAST_ONE_ACCOMPLISHED:
             self._set_state_at_least_one_accomplished(completed)
         elif self._algorithm == ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED:
             self._set_state_exactly_x_accomplished(completed)

@@ -267,6 +267,8 @@ class Scenario:
         )
 
     def send_scenario_started(self, execution: str):
+        if self._rtmonitor is None:
+            return
         msg_data = {
             "name": self._name,
             "goals": [g.serialize() for g in self._goals],
@@ -279,6 +281,8 @@ class Scenario:
         self._rtmonitor.send_event(event)
 
     def send_scenario_update(self, execution: str):
+        if self._rtmonitor is None:
+            return
         msg_data = {
             "name": self._name,
             "goals": [g.serialize() for g in self._goals],
@@ -291,6 +295,8 @@ class Scenario:
         self._rtmonitor.send_event(event)
 
     def send_scenario_finished(self, execution: str):
+        if self._rtmonitor is None:
+            return
         msg_data = {
             "name": self._name,
             "score": self.calc_score(),

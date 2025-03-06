@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from goalee import Scenario, MQTTBroker
+from goalee.brokers import RedisBroker
 from goalee.complex_goal import ComplexGoal, ComplexGoalAlgorithm
 from goalee.entity_goals import EntityStateChange, EntityStateCondition
 
@@ -9,29 +10,21 @@ from goalee.entity import Entity
 
 if __name__ == '__main__':
     broker = MQTTBroker(host='localhost', port=1883, username="", password="")
+    broker = RedisBroker(host='localhost', port=6379, username="", password="")
+
     TempSensor1 = Entity(
         name='TempSensor1',
         etype='sensor',
         topic='bedroom.sensor.temperature',
         attributes=['temp'],
-        source=MQTTBroker(
-            host='localhost',
-            port=1883,
-            username='',
-            password='',
-        )
+        source=broker
     )
     TempSensor2 = Entity(
         name='TempSensor2',
         etype='sensor',
         topic='bathroom.sensor.temperature',
         attributes=['temp'],
-        source=MQTTBroker(
-            host='localhost',
-            port=1883,
-            username='',
-            password='',
-        )
+        source=broker
     )
     FrontSonar = Entity(
         name='FrontSonar',
@@ -67,8 +60,10 @@ if __name__ == '__main__':
                                   else False
                               )
 
-    cg = ComplexGoal(max_duration=5, min_duration=1,
-                     algorithm=ComplexGoalAlgorithm.ALL_ACCOMPLISHED_ORDERED)
+    # cg = ComplexGoal(max_duration=5, min_duration=1,
+    #                  algorithm=ComplexGoalAlgorithm.ALL_ACCOMPLISHED_ORDERED)
+    cg = ComplexGoal(max_duration=30, min_duration=1,
+                     algorithm=ComplexGoalAlgorithm.AT_LEAST_ONE_ACCOMPLISHED)
     # Add goals in complex goal
     cg.add_goal(g1)
     cg.add_goal(g2)
@@ -90,7 +85,7 @@ if __name__ == '__main__':
     cg2.add_goal(g3)
     cg2.add_goal(g4)
 
-    # Add goal to target
+    # # Add goal to target
     t.add_goal(cg)
     t.add_goal(cg2)
     # Run Target

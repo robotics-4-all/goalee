@@ -242,14 +242,17 @@ class Scenario:
             # future.add_done_callback(lambda f: self.log_error(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state}"))
             future.add_done_callback(self.on_fatal)
 
-    def terminate_all_goals(self):
+    def terminate_all_goals(self, failed=False):
         for goal in self._goals:
             if goal.state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
-                goal.terminate()
+                if failed:
+                    goal.set_state(GoalState.FAILED)
+                else:
+                    goal.set_state(GoalState.TERMINATED)
 
     def on_fatal(self, f):
         self.log_error(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state}")
-        self.terminate_all_goals()
+        self.terminate_all_goals(failed=True)
 
     def stop_thread_executor(self):
         try:

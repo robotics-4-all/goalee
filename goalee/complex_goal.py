@@ -110,7 +110,8 @@ class ComplexGoal(Goal):
             for f in as_completed(futures, timeout=self._max_duration):
                 try:
                     gstate = f.result()
-                    if gstate == GoalState.COMPLETED and self._algorithm == ComplexGoalAlgorithm.AT_LEAST_ONE_ACCOMPLISHED:
+                    if gstate == GoalState.COMPLETED and \
+                        self._algorithm == ComplexGoalAlgorithm.AT_LEAST_ONE_ACCOMPLISHED:
                         break
                 except Exception as e:
                     self.log_error(f"Error in goal execution: {e}")

@@ -85,8 +85,10 @@ if __name__ == '__main__':
     cg2.add_goal(g3)
     cg2.add_goal(g4)
 
-    # # Add goal to target
-    t.add_goal(cg)
-    t.add_goal(cg2)
-    # Run Target
-    t.run_seq()
+    scenario = Scenario(
+        name="Scenario_1",
+        broker=broker,
+        goals=[cg, cg2]
+    )
+    # Run Scenario
+    scenario.run_seq()

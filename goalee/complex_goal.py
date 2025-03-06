@@ -52,9 +52,9 @@ class ComplexGoal(Goal):
         self._ts_start = ts_start
         self.on_enter()
         elapsed = time.time() - ts_start
-        if self._max_duration in (None, 0) and elapsed > self._max_duration:
+        if self._max_duration not in (None, 0) and elapsed > self._max_duration:
             self.set_state(GoalState.FAILED)
-        if self._min_duration in (None, 0) and elapsed < self._min_duration:
+        if self._min_duration not in (None, 0) and elapsed < self._min_duration:
             self.set_state(GoalState.FAILED)
         return self.state
 
@@ -100,21 +100,27 @@ class ComplexGoal(Goal):
         futures = []
         executor = ThreadPoolExecutor(n_threads)
         for goal in self._goals:
-            feature = executor.submit(goal.enter, )
-            futures.append(feature)
+            future = executor.submit(goal.enter, )
+            futures.append(future)
         try:
             # results = [future.result() for future in as_completed(futures, timeout=self._max_duration)]
             for f in as_completed(futures, timeout=self._max_duration):
                 try:
-                    gstate = f.result()
-                    if gstate == GoalState.COMPLETED and \
+                    goal = f.result()
+                    if goal.state == GoalState.COMPLETED and \
                         self._algorithm == ComplexGoalAlgorithm.AT_LEAST_ONE_ACCOMPLISHED:
+                        self.terminate_all_goals()
                         break
                 except Exception as e:
                     self.log_error(f"Error in goal execution: {e}")
         except TimeoutError:
             pass
         executor.shutdown(wait=False, cancel_futures=True)
+
+    def terminate_all_goals(self):
+        for goal in self._goals:
+            if goal.state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
+                goal.terminate()
 
     def calc_result(self):
         res_list = self._get_results_list()

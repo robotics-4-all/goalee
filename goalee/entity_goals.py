@@ -144,5 +144,6 @@ class EntityStateCondition(Goal):
                 return True
             else:
                 return False
-        except Exception:
+        except Exception as e:
+            # self.log_error(f"Error in condition evaluation: {e}")
             return False

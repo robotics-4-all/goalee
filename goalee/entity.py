@@ -7,8 +7,11 @@ from goalee.logging import default_logger as logger
 
 # A class representing an entity communicating via an MQTT broker on a specific topic
 class Entity:
-    def __init__(self, name: str, etype: str, topic: str,
-                 attributes: List[str], source=None,
+    def __init__(self, name: str,
+                 etype: str,
+                 topic: str,
+                 attributes: List[str],
+                 source=None,
                  init_buffers: bool = False,
                  buffer_length: int = 10,
                  strict_mode: bool = False) -> None:
@@ -139,6 +142,7 @@ class Entity:
         self._initialized = True
         self.state = state
         # Update attributes based on state
+        # print(state)
         self.update_attributes(state)
         self.update_buffers(state)
 

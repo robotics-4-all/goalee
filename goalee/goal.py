@@ -94,6 +94,9 @@ class Goal:
             self._send_state_change_event()
         self._report_state()
 
+    def terminate(self):
+        self.set_state(GoalState.TERMINATED)
+
     def _send_state_change_event(self):
         event = EventMsg(
                 type='goal_state',

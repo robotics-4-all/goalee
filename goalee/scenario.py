@@ -285,7 +285,8 @@ class Scenario:
         msg_data = {
             "name": self._name,
             "goals": [g.serialize() for g in self._goals],
-            "score": self.calc_score(),
+            "anti_goals": [g.serialize() for g in self._anti_goals],
+            "fatal_goals": [g.serialize() for g in self._fatal_goals],
             "weights": self._score_weights,
             "execution": execution
         }
@@ -299,6 +300,8 @@ class Scenario:
         msg_data = {
             "name": self._name,
             "goals": [g.serialize() for g in self._goals],
+            "anti_goals": [g.serialize() for g in self._anti_goals],
+            "fatal_goals": [g.serialize() for g in self._fatal_goals],
             "score": self.calc_score(),
             "weights": self._score_weights,
             "execution": execution
@@ -315,6 +318,8 @@ class Scenario:
             "score": self.calc_score(),
             "results": self.make_result_list(),
             "goals": [g.serialize() for g in self._goals],
+            "anti_goals": [g.serialize() for g in self._anti_goals],
+            "fatal_goals": [g.serialize() for g in self._fatal_goals],
             "weights": self._score_weights,
             "execution": execution
         }

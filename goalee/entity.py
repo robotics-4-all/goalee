@@ -142,7 +142,6 @@ class Entity:
         self._initialized = True
         self.state = state
         # Update attributes based on state
-        # print(state)
         self.update_attributes(state)
         self.update_buffers(state)
 

@@ -56,7 +56,7 @@ class ComplexGoal(Goal):
             self.set_state(GoalState.FAILED)
         if self._min_duration not in (None, 0) and elapsed < self._min_duration:
             self.set_state(GoalState.FAILED)
-        return self.state
+        return self
 
     def on_enter(self):
         self.log_info(f'Starting ComplexGoal <{self._name}>:\n'

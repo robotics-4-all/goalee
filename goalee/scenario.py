@@ -183,13 +183,16 @@ class Scenario:
             if _break:
                 break
         self.print_results()
+
         if self._rtmonitor:
             self.send_scenario_finished("sequential")
-            time.sleep(0.1)
-        if self._node:
-            self._node.stop()
+
         self.terminate_fatal_goals()
         self.stop_thread_executor()
+
+        if self._node:
+            time.sleep(0.5)
+            self._node.stop()
 
     def run_concurrent(self) -> None:
         """
@@ -229,12 +232,12 @@ class Scenario:
 
         if self._rtmonitor:
             self.send_scenario_finished("concurrent")
-            time.sleep(0.1)
-        if self._node:
-            self._node.stop()
 
         self.terminate_fatal_goals()
         self.stop_thread_executor()
+        if self._node:
+            time.sleep(0.5)
+            self._node.stop()
 
     def start_fatal_goals(self):
         futures = []

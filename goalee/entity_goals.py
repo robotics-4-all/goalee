@@ -145,5 +145,8 @@ class EntityStateCondition(Goal):
             else:
                 return False
         except Exception as e:
-            # self.log_error(f"Error in condition evaluation: {e}")
+            if "NoneType" in str(e):
+                pass
+            else:
+                self.log_error(f"Error in condition evaluation: {e}")
             return False

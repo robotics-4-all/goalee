@@ -103,12 +103,12 @@ class ComplexGoal(Goal):
             future = executor.submit(goal.enter, )
             futures.append(future)
         try:
-            # results = [future.result() for future in as_completed(futures, timeout=self._max_duration)]
             for f in as_completed(futures, timeout=self._max_duration):
                 try:
                     goal = f.result()
                     if goal.state == GoalState.COMPLETED and \
                         self._algorithm == ComplexGoalAlgorithm.AT_LEAST_ONE_ACCOMPLISHED:
+                        self.log_info(f"Goal <ComplexGoal:{goal.name}> reached at least one accomplished")
                         self.terminate_all_goals()
                         break
                 except Exception as e:
@@ -116,6 +116,10 @@ class ComplexGoal(Goal):
         except TimeoutError:
             pass
         executor.shutdown(wait=False, cancel_futures=True)
+
+    def terminate(self):
+        self.terminate_all_goals()
+        return super().terminate()
 
     def terminate_all_goals(self):
         for goal in self._goals:

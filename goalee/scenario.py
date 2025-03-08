@@ -54,9 +54,11 @@ class Scenario:
                   f"{'=' * 40}\n"
                   f"Name: {self._name}\n"
                   f"Broker: {self._broker}\n"
+                  f"Entities: {[entity.name for entity in self._entities]}\n"
                   f"Score Weights: {self._score_weights}\n"
                   f"Goals: {[goal.name for goal in self._goals]}\n"
-                  f"Entities: {[entity.name for entity in self._entities]}\n"
+                  f"Anti-Goals: {[goal.name for goal in self._anti_goals]}\n"
+                  f"Fatal-Goals: {[goal.name for goal in self._fatal_goals]}\n"
                   f"{'=' * 40}")
 
     def init_rtmonitor(self, etopic, ltopic):
@@ -186,7 +188,6 @@ class Scenario:
             time.sleep(0.1)
         if self._node:
             self._node.stop()
-
         self.terminate_fatal_goals()
         self.stop_thread_executor()
 
@@ -209,7 +210,7 @@ class Scenario:
         if self._rtmonitor:
             self.send_scenario_started("concurrent")
 
-        self.start_entities(self._goals)
+        self.start_entities(self._goals + self._anti_goals + self._fatal_goals)
 
         self.start_fatal_goals()
 

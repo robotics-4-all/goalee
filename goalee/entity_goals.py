@@ -1,3 +1,4 @@
+from enum import IntEnum
 from typing import Any, Optional, Callable, List
 
 from goalee.goal import Goal, GoalState
@@ -150,3 +151,92 @@ class EntityStateCondition(Goal):
             else:
                 self.log_error(f"Error in condition evaluation: {e}")
             return False
+
+
+class AttrStreamStrategy(IntEnum):
+    ALL = 0
+    NONE = 1
+    AT_LEAST_ONE = 2
+    JUST_ONE = 3
+    EXACTLY_X = 4
+    ALL_ORDERED = 5
+    EXACTLY_X_ORDERED = 6
+
+
+class EntityAttrStream(Goal):
+
+    def __init__(self,
+                 entity: List[Entity],
+                 attr: str,
+                 value: List[Any],
+                 strategy: AttrStreamStrategy,
+                 name: Optional[str] = None,
+                 event_emitter: Optional[Any] = None,
+                 max_duration: Optional[float] = None,
+                 min_duration: Optional[float] = None,
+                 for_duration: Optional[float] = None):
+        super().__init__([entity],
+                         event_emitter,
+                         name=name,
+                         max_duration=max_duration,
+                         min_duration=min_duration,
+                         for_duration=for_duration)
+        self._entity = entity
+        self._attr = attr
+        self._value = value
+        self._strategy = strategy
+
+        self._value_check_list = [False] * len(self._value)
+
+    def on_enter(self):
+        self.log_info(
+            f"Starting EntityAttrStream Goal <{self.name}>:\n"
+            f"Attribute: {self._attr}\n"
+            f"Value: {self._value}\n"
+            f"Strategy: {self._strategy.name}\n"
+            f"Max Duration: {self._max_duration}\n"
+            f"Min Duration: {self._min_duration}"
+        )
+
+    def on_exit(self):
+        pass
+
+    def tick(self):
+        self._last_state = self._entity.attributes.copy()
+
+        if self._attr not in self._entity.attributes:
+            raise ValueError(f"Attribute {self._attr} not found in entity {self._entity.name}")
+
+        for i, v in enumerate(self._value):
+            if self._last_state[self._attr] == v:
+                self._value_check_list[i] = True
+                if self._strategy in (AttrStreamStrategy.ALL_ORDERED,
+                                      AttrStreamStrategy.EXACTLY_X_ORDERED):
+                    self.process_for_ordered_strategy()
+
+        if self.is_done():
+            self.set_state(GoalState.COMPLETED)
+
+    def is_done(self):
+        if self._strategy == AttrStreamStrategy.ALL:
+            return all(self._value_check_list)
+        elif self._strategy == AttrStreamStrategy.NONE:
+            return not any(self._value_check_list)
+        elif self._strategy == AttrStreamStrategy.AT_LEAST_ONE:
+            return any(self._value_check_list)
+        elif self._strategy == AttrStreamStrategy.JUST_ONE:
+            return sum(self._value_check_list) == 1
+        elif self._strategy == AttrStreamStrategy.EXACTLY_X:
+            return sum(self._value_check_list) == len(self._value)
+        elif self._strategy == AttrStreamStrategy.ALL_ORDERED:
+            return all(self._value_check_list)
+        elif self._strategy == AttrStreamStrategy.EXACTLY_X_ORDERED:
+            return sum(self._value_check_list) == len(self._value)
+
+    def process_for_ordered_strategy(self):
+        idx = next((i for i in reversed(range(len(self._value_check_list))) if self._value_check_list[i]), -1)
+        if not all(self._value_check_list[:idx]):
+            self.reset_check_list()
+
+    def reset_check_list(self):
+        self._value_check_list = [False] * len(self._value)

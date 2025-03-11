@@ -1,7 +1,5 @@
 from typing import Any, Optional
 
-from commlib.node import Node
-
 from goalee.entity import Entity
 from goalee.goal import Goal, GoalState
 from goalee.types import Point, Orientation

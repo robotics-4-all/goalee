@@ -34,6 +34,7 @@ class Scenario:
         self._anti_goals: List[Goal] = anti_goals
         self._fatal_goals: List[Goal] = fatal_goals
         self._entities: List[Entity] = []
+        self._start_ts = self.get_current_ts()
 
         n_threads = len(self._fatal_goals + self._goals + self._anti_goals) + 1
         self._thread_executor = ThreadPoolExecutor(n_threads)
@@ -292,7 +293,9 @@ class Scenario:
             "anti_goals": [g.serialize() for g in self._anti_goals],
             "fatal_goals": [g.serialize() for g in self._fatal_goals],
             "weights": self._score_weights,
-            "execution": execution
+            "execution": execution,
+            "timestamp": self.get_current_ts(),
+            "elapsed_time": self.get_current_ts() - self._start_ts
         }
         event = EventMsg(type="scenario_started", data=msg_data)
         self.log_info(f'Sending scenario started event: {event}')
@@ -308,7 +311,9 @@ class Scenario:
             "fatal_goals": [g.serialize() for g in self._fatal_goals],
             "score": self.calc_score(),
             "weights": self._score_weights,
-            "execution": execution
+            "execution": execution,
+            "timestamp": self.get_current_ts(),
+            "elapsed_time": self.get_current_ts() - self._start_ts
         }
         event = EventMsg(type="scenario_update", data=msg_data)
         self.log_info(f'Sending scenario update event: {event}')
@@ -325,7 +330,9 @@ class Scenario:
             "anti_goals": [g.serialize() for g in self._anti_goals],
             "fatal_goals": [g.serialize() for g in self._fatal_goals],
             "weights": self._score_weights,
-            "execution": execution
+            "execution": execution,
+            "timestamp": self.get_current_ts(),
+            "elapsed_time": self.get_current_ts() - self._start_ts
         }
         event = EventMsg(type="scenario_finished", data=msg_data)
         self.log_info(f'Sending scenario finished event: {event}')
@@ -334,6 +341,17 @@ class Scenario:
     def make_result_list(self):
         res_list = [(goal.name, goal.status) for goal in self._goals]
         return res_list
+
+
+    @staticmethod
+    def get_current_ts():
+        """
+        Get the current timestamp with nanosecond accuracy as an integer.
+
+        Returns:
+            int: The current timestamp in nanoseconds.
+        """
+        return int(time.perf_counter_ns() * 1e-6)
 
     def calc_score(self):
         """

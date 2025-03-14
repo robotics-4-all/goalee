@@ -52,14 +52,17 @@ if __name__ == '__main__':
         source=broker
     )
 
-    t = Scenario("Scenario_1", broker)
-
     g1 = MovingAreaGoal(motion_entity=Robot1Pose,
                         entities=[Robot2Pose],
                         radius=2.0,
                         max_duration=10.0,
                         tag=AreaGoalTag.AVOID)
-    t.add_goal(g1)
+
+    t = Scenario(
+        name="Scenario_1",
+        broker=broker,
+        goals=[g1]
+    )
     etopic = f'monitor.{t.name}.event'
     ltopic = f'monitor.{t.name}.log'
     t.init_rtmonitor(etopic, ltopic)

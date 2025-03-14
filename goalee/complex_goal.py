@@ -83,7 +83,7 @@ class ComplexGoal(Goal):
     def run_seq(self):
         for g in self._goals:
             g.enter()
-            if time.time() - self._ts_start > self._max_duration:
+            if self._max_duration is not None and time.time() - self._ts_start > self._max_duration:
                 self.set_state(GoalState.FAILED)
                 break
 

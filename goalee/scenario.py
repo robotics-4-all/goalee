@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -19,7 +20,8 @@ class Scenario:
                  score_weights: Optional[List] = None,
                  goals: Optional[List[Goal]] = [],
                  anti_goals: Optional[List[Goal]] = [],
-                 fatal_goals: Optional[List[Goal]] = []):
+                 fatal_goals: Optional[List[Goal]] = [],
+                 goal_tick_freq_hz: int = None):
         self._broker: Broker = broker
         self._rtmonitor: RTMonitor = None
         if name in (None, "") or len(name) == 0:
@@ -35,6 +37,7 @@ class Scenario:
         self._fatal_goals: List[Goal] = fatal_goals
         self._entities: List[Entity] = []
         self._start_ts = self.get_current_ts()
+        self.goal_tick_freq_hz = goal_tick_freq_hz or int(os.getenv("GOAL_TICK_FREQ_HZ", "100"))
 
         n_threads = len(self._fatal_goals + self._goals + self._anti_goals) + 1
         self._thread_executor = ThreadPoolExecutor(n_threads)

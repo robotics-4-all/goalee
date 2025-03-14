@@ -43,6 +43,9 @@ class Goal:
         self._ts_hold: float = -1.0
         self.set_state(GoalState.IDLE)
 
+    def set_tick_freq(self, freq: int):
+        self._freq = freq
+
     def serialize(self):
         return {
             'name': self._name,

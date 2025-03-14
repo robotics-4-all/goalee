@@ -37,7 +37,7 @@ class Scenario:
         self._fatal_goals: List[Goal] = fatal_goals
         self._entities: List[Entity] = []
         self._start_ts = self.get_current_ts()
-        self.goal_tick_freq_hz = goal_tick_freq_hz or int(os.getenv("GOAL_TICK_FREQ_HZ", "100"))
+        self._goal_tick_freq_hz = goal_tick_freq_hz or int(os.getenv("GOAL_TICK_FREQ_HZ", "100"))
 
         n_threads = len(self._fatal_goals + self._goals + self._anti_goals) + 1
         self._thread_executor = ThreadPoolExecutor(n_threads)
@@ -177,6 +177,7 @@ class Scenario:
         self.start_fatal_goals()
 
         for g in self._goals:
+            g.set_tick_freq(self._goal_tick_freq_hz)
             g.enter()
             self.send_scenario_update("sequential")
             _break = False
@@ -223,6 +224,7 @@ class Scenario:
 
         futures = []
         for goal in self._goals:
+            goal.set_tick_freq(self._goal_tick_freq_hz)
             future = self._thread_executor.submit(goal.enter, )
             futures.append(future)
         for f in as_completed(futures):
@@ -246,6 +248,7 @@ class Scenario:
     def start_fatal_goals(self):
         futures = []
         for goal in self._fatal_goals:
+            goal.set_tick_freq(self._goal_tick_freq_hz)
             future = self._thread_executor.submit(goal.enter, )
             futures.append(future)
         for future in futures:

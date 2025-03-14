@@ -42,6 +42,9 @@ class ComplexGoal(Goal):
         self._algorithm = algorithm
         self._x_accomplished = accomplished
 
+        for goal in self._goals:
+            goal.set_tick_freq(self._goal_tick_freq_hz)
+
     @property
     def goals(self):
         return self._goals

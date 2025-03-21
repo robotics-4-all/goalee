@@ -23,8 +23,12 @@ class GoalRepeater(Goal):
                          min_duration=min_duration,
                          *args, **kwargs)
         self._goal = goal
+
         self._repeat_times = times
         self._times = 0
+
+        if (self._goal._max_duration is None or self._goal._max_duration > self._max_duration) and self._max_duration is not None:
+            self._goal._max_duration = self._max_duration
 
     def set_tick_freq(self, freq: int):
         self._goal.set_tick_freq(freq)
@@ -47,6 +51,8 @@ class GoalRepeater(Goal):
             self._goal.enter()
             _states.append(self._goal.state)
             _durations.append(self._goal.duration)
+            if self._max_duration not in (None, 0) and self.get_current_elapsed() > self._max_duration:
+                break
             self._goal.reset()
         elapsed = self.get_current_elapsed()
         if self._max_duration not in (None, 0) and elapsed > self._max_duration:

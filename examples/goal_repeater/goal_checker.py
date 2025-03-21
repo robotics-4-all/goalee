@@ -35,11 +35,14 @@ if __name__ == '__main__':
         source=broker
     )
 
-    g1 = EntityStateChange(entity=FrontSonar,
-                           max_duration=10.0)
+    g1 = EntityStateChange(
+        name="FrontSonarData",
+        entity=FrontSonar,
+        max_duration=10.0
+    )
 
-    # repeater = GoalRepeater(g1, 10, max_duration=30, min_duration=0)
-    repeater = GoalRepeater(g1, 10, max_duration=5, min_duration=0)  # This will fail
+    repeater = GoalRepeater(g1, 10, max_duration=30, min_duration=0)
+    # repeater = GoalRepeater(g1, 10, max_duration=5, min_duration=0)  # This will fail
 
     scenario = Scenario(
         name="Scenario_1",

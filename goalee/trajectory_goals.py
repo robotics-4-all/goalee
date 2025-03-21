@@ -32,9 +32,6 @@ class WaypointTrajectoryGoal(Goal):
             f'-> Min Duration: {self._min_duration}'
         )
 
-    def on_exit(self):
-        pass
-
     def current_target_waypoint(self):
         for i, reached in enumerate(self._waypoints_reached_map):
             if not reached:

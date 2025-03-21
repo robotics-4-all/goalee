@@ -41,6 +41,7 @@ class Goal:
         self._entities: List = entities if entities is not None else []
         self._ts_start: float = -1.0
         self._ts_hold: float = -1.0
+        self._ts_exit: float = -1.0
         self.set_state(GoalState.IDLE)
 
     def set_tick_freq(self, freq: int):
@@ -56,7 +57,7 @@ class Goal:
 
     @property
     def duration(self) -> float:
-        return self._duration
+        return self._ts_exit - self._ts_start
 
     @property
     def entities(self) -> list:
@@ -132,6 +133,7 @@ class Goal:
         self.set_state(GoalState.RUNNING)
         self.on_enter()
         self.run_until_exit()
+        self.on_exit()
         return self
 
     def get_current_ts(self):
@@ -187,10 +189,9 @@ class Goal:
         self._duration = elapsed
         if self._min_duration not in (None, 0) and elapsed < self._min_duration:
             self.set_state(GoalState.FAILED)
-        self.on_exit()
 
     def on_exit(self):
-        raise NotImplementedError("on_exit is not implemented")
+        self._ts_exit = self.get_current_ts()
 
     def _gen_random_name(self) -> str:
         """gen_random_id.
@@ -223,3 +224,15 @@ class Goal:
 
     def get_current_ts_ms(self):
         return int(time.time() * 1000)
+
+    def reset(self):
+        self.set_state(GoalState.IDLE)
+        self._ts_start = -1.0
+        self._ts_hold = -1.0
+        self._ts_exit = -1.0
+        self._duration = -1.0
+        self.on_reset()
+
+    def on_reset(self):
+        # override this method to add custom reset behavior
+        pass

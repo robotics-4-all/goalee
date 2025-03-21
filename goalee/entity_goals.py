@@ -45,9 +45,6 @@ class EntityStateChange(Goal):
             f"For Duration: {self._for_duration}"
         )
 
-    def on_exit(self):
-        pass
-
     def tick(self):
         if self._last_state != self.entity.attributes:
             if self._for_duration is not None and self._for_duration > 0:
@@ -84,15 +81,13 @@ class EntityStateCondition(Goal):
     def on_enter(self):
         self.log_info(
             f"Starting EntityStateCondition Goal <{self.name}>:\n"
-            f"Condition: {self._condition}\n"
-            f"Max Duration: {self._max_duration}\n"
-            f"Min Duration: {self._min_duration}\n"
-            f"For Duration: {self._for_duration}"
+            f"Parameters:\n"
+            f"  Condition: {self._condition}\n"
+            f"  Max Duration: {self._max_duration}\n"
+            f"  Min Duration: {self._min_duration}\n"
+            f"  For Duration: {self._for_duration}"
         )
         self._ts_hold = -1.0
-
-    def on_exit(self):
-        pass
 
     def tick(self):
         """
@@ -205,9 +200,6 @@ class EntityAttrStream(Goal):
             f"Max Duration: {self._max_duration}\n"
             f"Min Duration: {self._min_duration}"
         )
-
-    def on_exit(self):
-        pass
 
     def tick(self):
         self._last_state = self._entity.attributes.copy()

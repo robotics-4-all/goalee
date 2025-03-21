@@ -61,9 +61,6 @@ class RectangleAreaGoal(Goal):
             f'-> Strategy: {self._tag.name}'
         )
 
-    def on_exit(self):
-        pass
-
     def check_area(self):
         for _last_state in self._last_states:
             if _last_state.get('position', None) is None:
@@ -130,9 +127,6 @@ class CircularAreaGoal(Goal):
     @property
     def tag(self):
         return self._tag
-
-    def on_exit(self):
-        pass
 
     def on_enter(self):
         self.log_info(
@@ -229,9 +223,6 @@ class MovingAreaGoal(Goal):
     @property
     def tag(self):
         return self._tag
-
-    def on_exit(self):
-        pass
 
     def on_enter(self):
         self.log_info("Starting CircularAreaGoal <{}> with params:\n"

@@ -69,13 +69,11 @@ if __name__ == '__main__':
     cg.add_goal(g2)
 
     g3 = EntityStateCondition(entities=[TempSensor1],
-                            #   max_duration=10.0,
                               condition=lambda entities: True if
                                   entities['TempSensor1'].attributes['temp'] > 5 \
                                   else False
                               )
     g4 = EntityStateCondition(entities=[TempSensor2],
-                            #   max_duration=10.0,
                               condition=lambda entities: True if
                                   entities['TempSensor2'].attributes['temp'] > 5 \
                                   else False

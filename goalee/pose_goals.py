@@ -37,9 +37,6 @@ class PoseGoal(Goal):
             f'-> Deviation Orientation: {self._deviation_ori}'
         )
 
-    def on_exit(self):
-        pass
-
     def check_pose(self):
         if self._last_state.get('position', None) is None:
             return
@@ -89,9 +86,6 @@ class PositionGoal(Goal):
             f'-> Min Duration: {self._min_duration}'
         )
 
-    def on_exit(self):
-        pass
-
     def check_pos(self):
         if self._last_state.get('position', None) is None:
             return
@@ -139,9 +133,6 @@ class OrientationGoal(Goal):
             f'-> Max Duration: {self._max_duration}\n'
             f'-> Min Duration: {self._min_duration}'
         )
-
-    def on_exit(self):
-        pass
 
     def check_ori(self):
         if self._last_state.get('orientation', None) is None:

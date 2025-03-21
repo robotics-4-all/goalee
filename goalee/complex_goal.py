@@ -8,6 +8,7 @@ import uuid
 from commlib.node import Node
 from goalee.goal import Goal, GoalState
 from goalee.logging import default_logger as logger
+from goalee.rtmonitor import RTMonitor
 
 
 class ComplexGoalAlgorithm(IntEnum):
@@ -42,23 +43,23 @@ class ComplexGoal(Goal):
         self._algorithm = algorithm
         self._x_accomplished = accomplished
 
-        for goal in self._goals:
-            goal.set_tick_freq(self._goal_tick_freq_hz)
-
     @property
     def goals(self):
         return self._goals
 
-    def enter(self):
+    def set_tick_freq(self, freq: int):
+        for goal in self._goals:
+            goal.set_tick_freq(freq)
+
+    def enter(self, rtmonitor: RTMonitor = None):
         self.set_state(GoalState.RUNNING)
-        ts_start = time.time()
-        self._ts_start = ts_start
         self.on_enter()
-        elapsed = time.time() - ts_start
+        elapsed = self.get_current_elapsed()
         if self._max_duration not in (None, 0) and elapsed > self._max_duration:
             self.set_state(GoalState.FAILED)
         if self._min_duration not in (None, 0) and elapsed < self._min_duration:
             self.set_state(GoalState.FAILED)
+        self.on_exit()
         return self
 
     def on_enter(self):
@@ -66,7 +67,10 @@ class ComplexGoal(Goal):
                       f"Parameters:\n"
                       f"  Algorithm: {self._algorithm.name}\n"
                       f"  X-Accomplished: {self._x_accomplished}\n"
+                      f"  Max Duration: {self._max_duration}\n"
+                      f"  Min Duration: {self._min_duration}"
                       f"Internal Goals: {[f'{g.__class__.__name__}:{g.name}' for g in self._goals]}")
+        self._ts_start = self.get_current_ts()
 
         if self._algorithm in (ComplexGoalAlgorithm.ALL_ACCOMPLISHED_ORDERED,
                                ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED_ORDERED):
@@ -76,8 +80,8 @@ class ComplexGoal(Goal):
         self.calc_result()
         self.log_info(
             f'Finished ComplexGoal <{self.__class__.__name__}:{self._name}>\n'
-            f'-> Mode {self._algorithm.name}\n'
-            f'-> Results: {self._get_results_list()}'
+            f'  Mode {self._algorithm.name}\n'
+            f'  Results: {self._get_results_list()}'
         )
 
     def run_seq(self):
@@ -103,7 +107,7 @@ class ComplexGoal(Goal):
         futures = []
         executor = ThreadPoolExecutor(n_threads)
         for goal in self._goals:
-            future = executor.submit(goal.enter, )
+            future = executor.submit(goal.enter)
             futures.append(future)
         try:
             for f in as_completed(futures, timeout=self._max_duration):
@@ -183,9 +187,6 @@ class ComplexGoal(Goal):
         else:
             self.set_state(GoalState.FAILED)
 
-    def on_exit(self):
-        pass
-
     def add_goal(self, goal: Goal):
         if (goal._max_duration is None or goal._max_duration > self._max_duration) and self._max_duration is not None:
             goal._max_duration = self._max_duration
@@ -199,3 +200,10 @@ class ComplexGoal(Goal):
         super().set_comm_node(comm_node)
         for goal in self._goals:
             goal.set_comm_node(self._comm_node)
+
+    def reset(self):
+        self.set_state(GoalState.IDLE)
+        self._ts_start = -1.0
+        self._ts_hold = -1.0
+        for goal in self._goals:
+            goal.reset()

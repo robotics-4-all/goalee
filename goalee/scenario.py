@@ -153,6 +153,8 @@ class Scenario:
                     goal.motion_entity.start()
                 for entity in goal.entities:
                     entity.start()
+            elif goal.__class__.__name__ == 'GoalRepeater':
+                self.start_entities([goal._goal])
             else:
                 for entity in goal.entities:
                     entity.start()

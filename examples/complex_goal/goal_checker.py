@@ -47,39 +47,53 @@ if __name__ == '__main__':
 
     t = Scenario("Scenario_1", broker)
 
-    g1 = EntityStateCondition(entities=[FrontSonar],
-                            #   max_duration=10.0,
-                              condition=lambda entities: True if
-                                  entities['FrontSonar'].attributes['range'] > 5 \
-                                  else False
-                              )
-    g2 = EntityStateCondition(entities=[RearSonar],
-                            #   max_duration=10.0,
-                              condition=lambda entities: True if
-                                  entities['RearSonar'].attributes['range'] > 5 \
-                                  else False
-                              )
+    g1 = EntityStateCondition(
+        name="SC1",
+        entities=[FrontSonar],
+        condition=lambda entities: True if
+            entities['FrontSonar'].attributes['range'] > 5 \
+            else False
+    )
+    g2 = EntityStateCondition(
+        name="SC2",
+        entities=[RearSonar],
+        condition=lambda entities: True if
+            entities['RearSonar'].attributes['range'] > 5 \
+            else False
+    )
 
     # cg = ComplexGoal(max_duration=5, min_duration=1,
     #                  algorithm=ComplexGoalAlgorithm.ALL_ACCOMPLISHED_ORDERED)
-    cg = ComplexGoal(max_duration=30, min_duration=1,
-                     algorithm=ComplexGoalAlgorithm.AT_LEAST_ONE_ACCOMPLISHED)
+    cg = ComplexGoal(
+        name="AT_LEAST_ONE_ACCOMPLISHED",
+        max_duration=30,
+        min_duration=0,
+        algorithm=ComplexGoalAlgorithm.AT_LEAST_ONE_ACCOMPLISHED
+    )
     # Add goals in complex goal
     cg.add_goal(g1)
     cg.add_goal(g2)
 
-    g3 = EntityStateCondition(entities=[TempSensor1],
-                              condition=lambda entities: True if
-                                  entities['TempSensor1'].attributes['temp'] > 5 \
-                                  else False
-                              )
-    g4 = EntityStateCondition(entities=[TempSensor2],
-                              condition=lambda entities: True if
-                                  entities['TempSensor2'].attributes['temp'] > 5 \
-                                  else False
-                              )
-    cg2 = ComplexGoal(max_duration=5, min_duration=1,
-                      algorithm=ComplexGoalAlgorithm.NONE_ACCOMPLISHED)
+    g3 = EntityStateCondition(
+        name="SC3",
+        entities=[FrontSonar],
+        condition=lambda entities: True if
+            entities['FrontSonar'].attributes['range'] > 10 \
+            else False
+    )
+    g4 = EntityStateCondition(
+        name="SC4",
+        entities=[RearSonar],
+        condition=lambda entities: True if
+            entities['RearSonar'].attributes['range'] > 10 \
+            else False
+    )
+    cg2 = ComplexGoal(
+        name="NONE_ACCOMPLISHED",
+        max_duration=5,
+        min_duration=0,
+        algorithm=ComplexGoalAlgorithm.NONE_ACCOMPLISHED
+    )
     cg2.add_goal(g3)
     cg2.add_goal(g4)
 
@@ -89,4 +103,4 @@ if __name__ == '__main__':
         goals=[cg, cg2]
     )
     # Run Scenario
-    scenario.run_seq()
+    scenario.run_concurrent()

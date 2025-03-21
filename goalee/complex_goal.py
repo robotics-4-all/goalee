@@ -54,11 +54,18 @@ class ComplexGoal(Goal):
     def enter(self, rtmonitor: RTMonitor = None):
         self.set_state(GoalState.RUNNING)
         self.on_enter()
+
         elapsed = self.get_current_elapsed()
-        if self._max_duration not in (None, 0) and elapsed > self._max_duration:
+        if self._state == GoalState.FAILED:
+            pass
+        elif self._min_duration not in (None, 0) and elapsed < self._min_duration:
             self.set_state(GoalState.FAILED)
-        if self._min_duration not in (None, 0) and elapsed < self._min_duration:
-            self.set_state(GoalState.FAILED)
+        elif self._algorithm not in (ComplexGoalAlgorithm.NONE_ACCOMPLISHED,
+                                   ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED,
+                                   ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED_ORDERED):
+            if self._max_duration not in (None, 0) and elapsed > self._max_duration:
+                self.set_state(GoalState.FAILED)
+
         self.on_exit()
         return self
 
@@ -68,7 +75,7 @@ class ComplexGoal(Goal):
                       f"  Algorithm: {self._algorithm.name}\n"
                       f"  X-Accomplished: {self._x_accomplished}\n"
                       f"  Max Duration: {self._max_duration}\n"
-                      f"  Min Duration: {self._min_duration}"
+                      f"  Min Duration: {self._min_duration}\n"
                       f"Internal Goals: {[f'{g.__class__.__name__}:{g.name}' for g in self._goals]}")
         self._ts_start = self.get_current_ts()
 
@@ -77,7 +84,9 @@ class ComplexGoal(Goal):
             self.run_seq()
         else:
             self.run_concurrent()
+
         self.calc_result()
+
         self.log_info(
             f'Finished ComplexGoal <{self.__class__.__name__}:{self._name}>\n'
             f'  Mode {self._algorithm.name}\n'
@@ -87,7 +96,7 @@ class ComplexGoal(Goal):
     def run_seq(self):
         for g in self._goals:
             g.enter()
-            if self._max_duration is not None and time.time() - self._ts_start > self._max_duration:
+            if self._max_duration is not None and self.get_current_elapsed() > self._max_duration:
                 self.set_state(GoalState.FAILED)
                 break
 

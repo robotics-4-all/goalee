@@ -37,7 +37,7 @@ class GoalRepeater(Goal):
         self.log_info(f'Starting Goal-Repeater <{self._name}>:\n'
                       f"Parameters:\n"
                       f"  Goal: {self._goal.__class__.__name__}:{self._goal.name}\n"
-                      f"  Times: {self._times}\n"
+                      f"  Times: {self._repeat_times}\n"
                       f"  Max Duration: {self._max_duration}\n"
                       f"  Min Duration: {self._min_duration}")
 

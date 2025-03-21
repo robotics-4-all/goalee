@@ -1,8 +1,21 @@
 from enum import IntEnum
 from typing import Any, Optional, Callable, List
 
+import statistics
+import math
+
 from goalee.goal import Goal, GoalState
 from goalee.entity import Entity
+
+
+CONDITION_FUNCTIONS = {
+    'std': statistics.stdev,
+    'var': statistics.variance,
+    'mean': statistics.mean,
+    'min': min,
+    'max': max,
+    'fabs': math.fabs
+}
 
 
 class EntityStateChange(Goal):
@@ -28,7 +41,8 @@ class EntityStateChange(Goal):
             f"Starting EntityStateChange Goal <{self.name}>:\n"
             f"Entity: {self.entity.name}\n"
             f"Max Duration: {self._max_duration}\n"
-            f"Min Duration: {self._min_duration}"
+            f"Min Duration: {self._min_duration}\n"
+            f"For Duration: {self._for_duration}"
         )
 
     def on_exit(self):
@@ -72,7 +86,8 @@ class EntityStateCondition(Goal):
             f"Starting EntityStateCondition Goal <{self.name}>:\n"
             f"Condition: {self._condition}\n"
             f"Max Duration: {self._max_duration}\n"
-            f"Min Duration: {self._min_duration}"
+            f"Min Duration: {self._min_duration}\n"
+            f"For Duration: {self._for_duration}"
         )
         self._ts_hold = -1.0
 
@@ -127,20 +142,13 @@ class EntityStateCondition(Goal):
             bool: True if the condition evaluates to True, False otherwise. If an
                   exception occurs during evaluation, the method returns False.
         """
-        import statistics
         try:
             if eval(
                 self._condition,
                 {
                     'entities': entities
                 },
-                {
-                    'std': statistics.stdev,
-                    'var': statistics.variance,
-                    'mean': statistics.mean,
-                    'min': min,
-                    'max': max,
-                }
+                CONDITION_FUNCTIONS
             ):
                 return True
             else:

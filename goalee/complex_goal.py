@@ -213,6 +213,9 @@ class ComplexGoal(Goal):
     def reset(self):
         self.set_state(GoalState.IDLE)
         self._ts_start = -1.0
+        self._ts_exit = -1.0
         self._ts_hold = -1.0
+        self._duration = -1.0
         for goal in self._goals:
             goal.reset()
+        self.on_reset()

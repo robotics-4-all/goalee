@@ -188,6 +188,7 @@ class EntityAttrStream(Goal):
         self._attr = attr
         self._value = value
         self._strategy = strategy
+        self._last_state = None
 
         self._value_check_list = [False] * len(self._value)
 
@@ -202,17 +203,26 @@ class EntityAttrStream(Goal):
         )
 
     def tick(self):
-        self._last_state = self._entity.attributes.copy()
+        _state = self._entity.attributes.copy()
+        if self._last_state is None:
+            self._last_state = _state
+        elif _state[self._attr] == self._last_state[self._attr]:
+            return
+
+        self._last_state = _state
 
         if self._attr not in self._entity.attributes:
             raise ValueError(f"Attribute {self._attr} not found in entity {self._entity.name}")
 
         for i, v in enumerate(self._value):
+            if self._value_check_list[i] == True:
+                continue
             if self._last_state[self._attr] == v:
                 self._value_check_list[i] = True
                 if self._strategy in (AttrStreamStrategy.ALL_ORDERED,
                                       AttrStreamStrategy.EXACTLY_X_ORDERED):
                     self.process_for_ordered_strategy()
+                    break
 
         if self.is_done():
             self.set_state(GoalState.COMPLETED)
@@ -237,6 +247,13 @@ class EntityAttrStream(Goal):
         idx = next((i for i in reversed(range(len(self._value_check_list))) if self._value_check_list[i]), -1)
         if not all(self._value_check_list[:idx]):
             self.reset_check_list()
+
+    # def process_for_ordered_strategy(self):
+    #     self.log_info(f"Value check list: {self._value_check_list}")
+    #     for i in range(len(self._value_check_list)-1):
+    #         if self._value_check_list[i+1] and not self._value_check_list[i]:
+    #             # self.reset_check_list()
+    #             break
 
     def reset_check_list(self):
         self._value_check_list = [False] * len(self._value)

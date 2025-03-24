@@ -59,7 +59,9 @@ class GoalRepeater(Goal):
             self.set_state(GoalState.FAILED)
         elif self._min_duration not in (None, 0) and elapsed < self._min_duration:
             self.set_state(GoalState.FAILED)
-        else:
+        elif self._state == GoalState.RUNNING:
             self.set_state(GoalState.COMPLETED if all([s == GoalState.COMPLETED for s in _states]) else GoalState.FAILED)
+        else:  # Terminated / Failed
+            pass
         self.on_exit()
         return self

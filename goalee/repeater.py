@@ -43,12 +43,15 @@ class GoalRepeater(Goal):
 
     def enter(self, rtmonitor: RTMonitor = None):
         self._ts_start = self.get_current_ts()
+        self.set_state(GoalState.RUNNING)
         self.on_enter()
         _states = []
         _durations = []
         while self._times < self._repeat_times and self._state not in (GoalState.TERMINATED, GoalState.FAILED, GoalState.COMPLETED):
             self._times += 1
             self._goal.enter()
+            if self._state not in (GoalState.RUNNING):
+                break
             _states.append(self._goal.state)
             _durations.append(self._goal.duration)
             if self._max_duration not in (None, 0) and self.get_current_elapsed() > self._max_duration:

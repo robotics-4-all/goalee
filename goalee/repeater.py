@@ -50,7 +50,7 @@ class GoalRepeater(Goal):
         while self._times < self._repeat_times and self._state not in (GoalState.TERMINATED, GoalState.FAILED, GoalState.COMPLETED):
             self._times += 1
             self._goal.enter()
-            if self._state not in (GoalState.RUNNING):
+            if self._state != GoalState.RUNNING:
                 break
             _states.append(self._goal.state)
             _durations.append(self._goal.duration)

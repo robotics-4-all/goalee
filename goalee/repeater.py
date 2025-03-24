@@ -46,7 +46,7 @@ class GoalRepeater(Goal):
         self.on_enter()
         _states = []
         _durations = []
-        while self._times < self._repeat_times:
+        while self._times < self._repeat_times and self._state == GoalState.RUNNING:
             self._times += 1
             self._goal.enter()
             _states.append(self._goal.state)

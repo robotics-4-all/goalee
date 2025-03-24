@@ -47,6 +47,16 @@ class ComplexGoal(Goal):
     def goals(self):
         return self._goals
 
+    def set_state_cascaded(self, state: GoalState):
+        for goal in self._goals:
+            goal.set_state(state)
+        self.set_state(state)
+
+    def terminate(self):
+        for goal in self._goals:
+            goal.terminate()
+        super().terminate()
+
     def set_tick_freq(self, freq: int):
         for goal in self._goals:
             goal.set_tick_freq(freq)

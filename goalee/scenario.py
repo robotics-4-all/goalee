@@ -269,10 +269,11 @@ class Scenario:
     def terminate_all_goals(self, failed=False):
         for goal in self._goals:
             if goal.state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
-                if failed:
-                    goal.set_state(GoalState.FAILED)
-                else:
-                    goal.set_state(GoalState.TERMINATED)
+                goal.terminate()
+                # if failed:
+                #     goal.set_state(GoalState.FAILED)
+                # else:
+                    # goal.set_state(GoalState.TERMINATED)
 
     def on_fatal(self, f):
         self.log_error(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state}")

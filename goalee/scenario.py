@@ -201,7 +201,7 @@ class Scenario:
             self.send_scenario_finished("sequential")
 
         self.terminate_fatal_goals()
-        self.stop_thread_executor()
+        self.stop_thread_executor(wait=False, force=True)
 
         if self._node:
             time.sleep(0.5)
@@ -247,10 +247,18 @@ class Scenario:
             self.send_scenario_finished("concurrent")
 
         self.terminate_fatal_goals()
-        self.stop_thread_executor()
+        self.stop_thread_executor(wait=False, force=True)
         if self._node:
             time.sleep(0.5)
             self._node.stop()
+
+    def start_goals(self):
+        futures = []
+        for goal in self._goals:
+            future = self._thread_executor.submit(goal.enter, )
+            futures.append(future)
+        for future in futures:
+            future.add_done_callback(self.on_goal)
 
     def start_fatal_goals(self):
         futures = []
@@ -258,30 +266,33 @@ class Scenario:
             future = self._thread_executor.submit(goal.enter, )
             futures.append(future)
         for future in futures:
-            # future.add_done_callback(lambda f: self.log_error(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state}"))
             future.add_done_callback(self.on_fatal)
+
+    def start_antigoals(self):
+        futures = []
+        for goal in self.anti_goals:
+            future = self._thread_executor.submit(goal.enter, )
+            futures.append(future)
+        for future in futures:
+            future.add_done_callback(self.on_antigoal)
 
     def terminate_fatal_goals(self):
         for goal in self._fatal_goals:
             if goal.state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
                 goal.terminate()
 
-    def terminate_all_goals(self, failed=False):
-        for goal in self._goals:
+    def terminate_all_goals(self):
+        for goal in self._goals + self._anti_goals:
             if goal.state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
                 goal.terminate()
-                # if failed:
-                #     goal.set_state(GoalState.FAILED)
-                # else:
-                    # goal.set_state(GoalState.TERMINATED)
 
     def on_fatal(self, f):
         self.log_error(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state}")
-        self.terminate_all_goals(failed=True)
+        self.terminate_all_goals()
 
-    def stop_thread_executor(self):
+    def stop_thread_executor(self, wait: bool = False, force: bool = True):
         try:
-            self._thread_executor.shutdown(wait=False, cancel_futures=True)
+            self._thread_executor.shutdown(wait=wait, cancel_futures=force)
         except Exception:
             pass
 

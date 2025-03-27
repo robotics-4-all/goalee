@@ -17,7 +17,8 @@ class Scenario:
     def __init__(self,
                  name: str = "",
                  broker: Optional[Broker] = None,
-                 score_weights: Optional[List] = None,
+                 goal_weights: Optional[List] = None,
+                 antigoal_weights: Optional[List] = None,
                  goals: Optional[List[Goal]] = [],
                  anti_goals: Optional[List[Goal]] = [],
                  fatal_goals: Optional[List[Goal]] = [],
@@ -27,7 +28,8 @@ class Scenario:
         if name in (None, "") or len(name) == 0:
             name = self.gen_random_name()
         self._name: str = name
-        self._score_weights: List[float] = score_weights
+        self._goal_weights: List[float] = goal_weights
+        self._antigoal_weights: List[float] = antigoal_weights
         if self._broker is not None:
             self._node = self._create_comm_node(self._broker)
         else:
@@ -41,6 +43,17 @@ class Scenario:
 
         n_threads = len(self._fatal_goals + self._goals + self._anti_goals) + 1
         self._thread_executor = ThreadPoolExecutor(n_threads)
+
+        if self._goal_weights is None:
+            self._goal_weights = [1.0 / len(self._goals)] * len(self._goals)
+        elif len(self._goal_weights) != len(self._goals):
+            self.log_warning("Goal weights length does not match the number of goals. Initializing to equal weights.")
+            self._goal_weights = [1.0 / len(self._goals)] * len(self._goals)
+        if self._antigoal_weights is None:
+            self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(self._anti_goals)
+        elif len(self._antigoal_weights) != len(self._anti_goals):
+            self.log_warning("Anti-goal weights length does not match the number of anti-goals. Initializing to equal weights.")
+            self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(self._anti_goals)
 
         for goal in self._goals:
             goal.set_tick_freq(self._goal_tick_freq_hz)
@@ -61,16 +74,17 @@ class Scenario:
                     self._entities.append(entity)
 
     def print_stats(self):
-        self.log_info(f"Scenario '{self._name}' Statistics:\n"
-                  f"{'=' * 40}\n"
-                  f"Name: {self._name}\n"
-                  f"Broker: {self._broker}\n"
-                  f"Entities: {[entity.name for entity in self._entities]}\n"
-                  f"Score Weights: {self._score_weights}\n"
-                  f"Goals: {[goal.name for goal in self._goals]}\n"
-                  f"Anti-Goals: {[goal.name for goal in self._anti_goals]}\n"
-                  f"Fatal-Goals: {[goal.name for goal in self._fatal_goals]}\n"
-                  f"{'=' * 40}")
+        self.log_info(f"Scenario '{self._name}' Configuration:\n"
+                  f"{'=' * 80}\n"
+                  f"    Name: {self._name}\n"
+                  f"    Broker: {self._broker}\n"
+                  f"    Entities: {[entity.name for entity in self._entities]}\n"
+                  f"    Goals: {[goal.name for goal in self._goals]}\n"
+                  f"    Anti-Goals: {[goal.name for goal in self._anti_goals]}\n"
+                  f"    Fatal-Goals: {[goal.name for goal in self._fatal_goals]}\n"
+                  f"    Goal Weights: {self._goal_weights}\n"
+                  f"    Anti-Goal Weights: {self._antigoal_weights}\n"
+                  f"{'=' * 80}")
 
     def init_rtmonitor(self, etopic, ltopic):
         if self._node is not None:
@@ -184,6 +198,7 @@ class Scenario:
         self.start_entities(self._goals + self._anti_goals + self._fatal_goals)
 
         self.start_fatal_goals()
+        self.start_antigoals()
 
         for g in self._goals:
             g.enter()
@@ -201,7 +216,8 @@ class Scenario:
             self.send_scenario_finished("sequential")
 
         self.terminate_fatal_goals()
-        self.stop_thread_executor(wait=False, force=True)
+        self.terminate_all_goals()
+        self.stop_thread_executor()
 
         if self._node:
             time.sleep(0.5)
@@ -229,6 +245,7 @@ class Scenario:
         self.start_entities(self._goals + self._anti_goals + self._fatal_goals)
 
         self.start_fatal_goals()
+        self.start_antigoals()
 
         futures = []
         for goal in self._goals:
@@ -247,7 +264,9 @@ class Scenario:
             self.send_scenario_finished("concurrent")
 
         self.terminate_fatal_goals()
-        self.stop_thread_executor(wait=False, force=True)
+        self.terminate_all_goals()
+        self.stop_thread_executor()
+
         if self._node:
             time.sleep(0.5)
             self._node.stop()
@@ -270,7 +289,7 @@ class Scenario:
 
     def start_antigoals(self):
         futures = []
-        for goal in self.anti_goals:
+        for goal in self._anti_goals:
             future = self._thread_executor.submit(goal.enter, )
             futures.append(future)
         for future in futures:
@@ -290,6 +309,12 @@ class Scenario:
         self.log_error(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state}")
         self.terminate_all_goals()
 
+    def on_goal(self, f):
+        self.log_info(f"Goal <{f.result().name}> exited with state: {f.result().state}")
+
+    def on_antigoal(self, f):
+        self.log_info(f"AntiGoal <{f.result().name}> exited with state: {f.result().state}")
+
     def stop_thread_executor(self, wait: bool = False, force: bool = True):
         try:
             self._thread_executor.shutdown(wait=wait, cancel_futures=force)
@@ -298,14 +323,21 @@ class Scenario:
 
     def print_results(self):
         self.log_info(
-            f"{'=' * 40}\n"
             f"Scenario '{self._name}' Completed (Concurrent Mode)\n"
-            f"{'=' * 40}\n"
+            f"{'=' * 80}\n"
             "Results:\n" +
-            "\n".join([f"  - {goal_name}: {'✓' if goal_status else '✗'}" for goal_name, goal_status in self.make_result_list()]) +
-            f"\n{'=' * 40}\n"
-            f"Final Score: {self.calc_score():.2f}\n"
-            f"{'=' * 40}"
+            "   Goals:\n" +
+            "\n".join([f"       - {goal_name}: {'✓' if goal_status else '✗'}" for
+                       goal_name, goal_status in [(goal.name, goal.status) for goal in self._goals]]) +
+            "\n   Anti-Goals:\n" +
+            "\n".join([f"       - {goal_name}: {'✓' if goal_status else '✗'}" for
+                       goal_name, goal_status in [(goal.name, goal.status) for goal in self._anti_goals]]) +
+            "\n   Fatal Goals:\n" +
+            "\n".join([f"       - {goal_name}: {'✓' if goal_status else '✗'}" for
+                       goal_name, goal_status in [(goal.name, goal.status) for goal in self._fatal_goals]]) +
+            f"\n{'=' * 80}\n"
+            f"Final Score (goals - antigoals): {self.calc_score():.2f}\n"
+            f"{'=' * 80}"
         )
 
     def send_scenario_started(self, execution: str):
@@ -316,7 +348,8 @@ class Scenario:
             "goals": [g.serialize() for g in self._goals],
             "anti_goals": [g.serialize() for g in self._anti_goals],
             "fatal_goals": [g.serialize() for g in self._fatal_goals],
-            "weights": self._score_weights,
+            "goal_weights": self._goal_weights,
+            "antigoal_weights": self._antigoal_weights,
             "execution": execution,
             "timestamp": self.get_current_ts(),
             "elapsed_time": self.get_current_ts() - self._start_ts
@@ -334,7 +367,8 @@ class Scenario:
             "anti_goals": [g.serialize() for g in self._anti_goals],
             "fatal_goals": [g.serialize() for g in self._fatal_goals],
             "score": self.calc_score(),
-            "weights": self._score_weights,
+            "goal_weights": self._goal_weights,
+            "antigoal_weights": self._antigoal_weights,
             "execution": execution,
             "timestamp": self.get_current_ts(),
             "elapsed_time": self.get_current_ts() - self._start_ts
@@ -353,7 +387,8 @@ class Scenario:
             "goals": [g.serialize() for g in self._goals],
             "anti_goals": [g.serialize() for g in self._anti_goals],
             "fatal_goals": [g.serialize() for g in self._fatal_goals],
-            "weights": self._score_weights,
+            "goal_weights": self._goal_weights,
+            "antigoal_weights": self._antigoal_weights,
             "execution": execution,
             "timestamp": self.get_current_ts(),
             "elapsed_time": self.get_current_ts() - self._start_ts
@@ -387,10 +422,9 @@ class Scenario:
         Returns:
             float: The calculated weighted score.
         """
-        if self._score_weights is None:
-            self._score_weights = [1.0 / len(self._goals)] * len(self._goals)
-        res = [goal.status * w for goal,w in zip(self._goals, self._score_weights)]
-        res = sum(res)
+        goal_res = [goal.status * w for goal,w in zip(self._goals, self._goal_weights)]
+        antigoal_res = [goal.status * w for goal,w in zip(self._anti_goals, self._antigoal_weights)]
+        res = sum(goal_res) - sum(antigoal_res)
         return res
 
     def log_namespace(self):

@@ -50,7 +50,8 @@ class Scenario:
             self.log_warning("Goal weights length does not match the number of goals. Initializing to equal weights.")
             self._goal_weights = [1.0 / len(self._goals)] * len(self._goals)
         if self._antigoal_weights is None:
-            self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(self._anti_goals)
+            if len(self._anti_goals) > 0:
+                self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(self._anti_goals)
         elif len(self._antigoal_weights) != len(self._anti_goals):
             self.log_warning("Anti-goal weights length does not match the number of anti-goals. Initializing to equal weights.")
             self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(self._anti_goals)
@@ -422,8 +423,10 @@ class Scenario:
         Returns:
             float: The calculated weighted score.
         """
-        goal_res = [goal.status * w for goal,w in zip(self._goals, self._goal_weights)]
-        antigoal_res = [goal.status * w for goal,w in zip(self._anti_goals, self._antigoal_weights)]
+        goal_res = [goal.status * w for goal,w in zip(self._goals, self._goal_weights)] if \
+            len(self._goals) > 0 else [0]
+        antigoal_res = [goal.status * w for goal,w in zip(self._anti_goals, self._antigoal_weights)] if \
+            len(self._anti_goals) > 0 else [0]
         res = sum(goal_res) - sum(antigoal_res)
         return res
 

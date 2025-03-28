@@ -34,9 +34,13 @@ if __name__ == '__main__':
         source=broker
     )
 
-    g1 = EntityStateChange(entity=FrontSonar,
-                           max_duration=10.0)
+    g1 = EntityStateChange(
+        name='State_Change',
+        entity=FrontSonar,
+        max_duration=10.0
+    )
     g2 = EntityStateCondition(
+        name='State_Condition',
         entities=[FrontSonar],
         max_duration=10.0,
         condition=lambda entities: True if
@@ -44,6 +48,7 @@ if __name__ == '__main__':
     )
 
     g3 = EntityStateCondition(
+        name='AntiGoal_Test',
         entities=[FrontSonar],
         max_duration=10.0,
         condition=lambda entities: True if

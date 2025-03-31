@@ -207,12 +207,14 @@ class ComplexGoal(Goal):
             self.set_state(GoalState.FAILED)
 
     def add_goal(self, goal: Goal):
-        if (goal._max_duration is None or goal._max_duration > self._max_duration) and self._max_duration is not None:
-            goal._max_duration = self._max_duration
-            self.log_info(f'Goal <{goal.__class__.__name__}:{goal.name}> max duration set to {self._max_duration}')
-        if (goal._min_duration is None or goal._min_duration < self._min_duration) and self._min_duration is not None:
-            goal._min_duration = self._min_duration
-            self.log_info(f'Goal <{goal.__class__.__name__}:{goal.name}> min duration set to {self._min_duration}')
+        if self._max_duration is not None:
+            if (goal._max_duration is None or goal._max_duration > self._max_duration) and self._max_duration is not None:
+                goal._max_duration = self._max_duration
+                self.log_info(f'Goal <{goal.__class__.__name__}:{goal.name}> max duration set to {self._max_duration}')
+        if self._min_duration is not None:
+            if (goal._min_duration is None or goal._min_duration < self._min_duration) and self._min_duration is not None:
+                goal._min_duration = self._min_duration
+                self.log_info(f'Goal <{goal.__class__.__name__}:{goal.name}> min duration set to {self._min_duration}')
         self._goals.append(goal)
 
     def set_comm_node(self, comm_node: Node):

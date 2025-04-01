@@ -269,7 +269,7 @@ class Scenario:
 
         if self._node:
             time.sleep(2)
-            self._node.stop()
+            # self._node.stop()
 
     def start_goals(self):
         futures = []

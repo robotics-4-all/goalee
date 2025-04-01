@@ -191,7 +191,7 @@ class Scenario:
         self.print_stats()
         if self._node:
             self._node.run()
-            time.sleep(0.5)
+            time.sleep(1)
         if self._rtmonitor:
             self.send_scenario_started("sequential")
 
@@ -220,7 +220,7 @@ class Scenario:
         self.stop_thread_executor()
 
         if self._node:
-            time.sleep(0.5)
+            time.sleep(2)
             self._node.stop()
 
     def run_concurrent(self) -> None:
@@ -237,7 +237,7 @@ class Scenario:
         self.print_stats()
         if self._node:
             self._node.run()
-            time.sleep(0.5)
+            time.sleep(1)
 
         if self._rtmonitor:
             self.send_scenario_started("concurrent")
@@ -268,7 +268,7 @@ class Scenario:
         self.stop_thread_executor()
 
         if self._node:
-            time.sleep(0.5)
+            time.sleep(2)
             self._node.stop()
 
     def start_goals(self):

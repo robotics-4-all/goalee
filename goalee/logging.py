@@ -2,7 +2,7 @@ import logging
 import os
 from rich.logging import RichHandler
 
-ZERO_LOGS = int(os.getenv('ZERO_LOGS', 0))
+ZERO_LOGS = int(os.getenv('GOALDSL_ZERO_LOGS', 0))
 LOG_LEVEL = os.getenv("GOALDSL_LOG_LEVEL", "INFO")
 
 if ZERO_LOGS:

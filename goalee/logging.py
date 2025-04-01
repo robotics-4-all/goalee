@@ -12,6 +12,6 @@ else:
     logging.basicConfig(
         format=LOGGING_FORMAT, datefmt="[%X]", handlers=[RichHandler()]
     )
+    logging.getLogger().setLevel(LOG_LEVEL)
 
 default_logger = logging.getLogger()
-default_logger.setLevel(LOG_LEVEL)

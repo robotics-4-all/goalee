@@ -66,13 +66,14 @@ class ComplexGoal(Goal):
         self.on_enter()
 
         elapsed = self.get_current_elapsed()
+        self._duration = elapsed
         if self._state == GoalState.FAILED:
             pass
         elif self._min_duration not in (None, 0) and elapsed < self._min_duration:
             self.set_state(GoalState.FAILED)
         elif self._algorithm not in (ComplexGoalAlgorithm.NONE_ACCOMPLISHED,
-                                   ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED,
-                                   ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED_ORDERED):
+                                     ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED,
+                                     ComplexGoalAlgorithm.EXACTLY_X_ACCOMPLISHED_ORDERED):
             if self._max_duration not in (None, 0) and elapsed > self._max_duration:
                 self.set_state(GoalState.FAILED)
 

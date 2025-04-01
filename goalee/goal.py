@@ -113,12 +113,12 @@ class Goal:
                     'elapsed_time': self.get_current_elapsed(),
                 }
         )
-        self.log_info(f'Sending goal state change event: {event}')
+        # self.log_info(f'Sending goal state change event: {event}')
         self._rtmonitor.send_event(event)
 
     def _report_state(self):
         self.log_info(f'Goal <{self.__class__.__name__}:{self.name}> entered {self.state.name} state ' +
-              f'(maxT={self._max_duration}, minT={self._min_duration})')
+              f'(maxT={self._max_duration}, minT={self._min_duration}. forT={self._for_duration})')
 
     def enter(self, rtmonitor: RTMonitor = None):
         """
@@ -187,7 +187,7 @@ class Goal:
             time.sleep(1 / self._freq)
         elapsed = self.get_current_elapsed()
         self._duration = elapsed
-        if self._min_duration not in (None, 0) and elapsed < self._min_duration:
+        if self._min_duration not in (None, 0) and self._duration < self._min_duration:
             self.set_state(GoalState.FAILED)
 
     def on_exit(self):

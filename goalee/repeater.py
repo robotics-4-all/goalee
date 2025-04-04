@@ -34,10 +34,7 @@ class GoalRepeater(Goal):
         self._goal.set_tick_freq(freq)
 
     def serialize(self):
-         return super().serialize().update({
-            'goals': [self._goal.serialize()],
-            'times': self._repeat_times,
-         })
+        return {**super().serialize(), 'times': self._repeat_times, 'goals': [self._goal.serialize()]}
 
     def on_enter(self):
         self.log_info(f'Starting Goal-Repeater <{self._name}>:\n'

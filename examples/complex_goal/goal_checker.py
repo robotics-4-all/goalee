@@ -102,5 +102,8 @@ if __name__ == '__main__':
         broker=broker,
         goals=[cg, cg2]
     )
+    etopic = f'monitor.{scenario.name}.event'
+    ltopic = f'monitor.{scenario.name}.log'
+    scenario.init_rtmonitor(etopic, ltopic)
     # Run Scenario
     scenario.run_concurrent()

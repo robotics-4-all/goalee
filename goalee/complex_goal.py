@@ -31,12 +31,12 @@ class ComplexGoal(Goal):
                  max_duration: Optional[float] = None,
                  min_duration: Optional[float] = None,
                  *args, **kwargs):
-        super().__init__(comm_node,
-                         event_emitter,
+        super().__init__(event_emitter=event_emitter,
                          name=name,
                          max_duration=max_duration,
                          min_duration=min_duration,
                          *args, **kwargs)
+        # self.set_comm_node(comm_node)
         self._goals = []
         if algorithm is None:
             algorithm = ComplexGoalAlgorithm.ALL_ACCOMPLISHED
@@ -62,10 +62,7 @@ class ComplexGoal(Goal):
             goal.set_tick_freq(freq)
 
     def serialize(self):
-        return super().serialize().update({
-            'algorithm': self._algorithm.name,
-            'goals': [goal.serialize() for goal in self._goals],
-        })
+        return {**super().serialize(), 'algorithm': self._algorithm.name, 'goals': [goal.serialize() for goal in self._goals]}
 
     def enter(self, rtmonitor: RTMonitor = None):
         self.set_state(GoalState.RUNNING)

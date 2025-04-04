@@ -10,6 +10,7 @@ from goalee.goal import Goal, GoalState
 from goalee.brokers import Broker
 from goalee.logging import default_logger as logger
 from goalee.rtmonitor import RTMonitor, EventMsg
+from goalee.definitions import GOAL_TICK_FREQ_HZ
 
 
 class Scenario:
@@ -38,7 +39,7 @@ class Scenario:
         self._fatal_goals: List[Goal] = fatal_goals
         self._entities: List[Entity] = []
         self._start_ts = self.get_current_ts()
-        self._goal_tick_freq_hz = goal_tick_freq_hz or int(os.getenv("GOAL_TICK_FREQ_HZ", "100"))
+        self._goal_tick_freq_hz = goal_tick_freq_hz or GOAL_TICK_FREQ_HZ
 
         n_threads = len(self._fatal_goals + self._goals + self._anti_goals) + 1
         self._thread_executor = ThreadPoolExecutor(n_threads)
@@ -74,6 +75,7 @@ class Scenario:
                   f"    Fatal-Goals: {[goal.name for goal in self._fatal_goals]}\n"
                   f"    Goal Weights: {self._goal_weights}\n"
                   f"    Anti-Goal Weights: {self._antigoal_weights}\n"
+                  f"    Goal Tick Frequency (hz): {self._goal_tick_freq_hz}\n"
                   f"{'=' * 80}")
 
     def init_rtmonitor(self, etopic, ltopic):

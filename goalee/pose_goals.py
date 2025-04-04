@@ -28,7 +28,7 @@ class PoseGoal(Goal):
         self._deviation_ori = deviation_ori
 
     def on_enter(self):
-        self.log_info(
+        self.log_debug(
             f'Starting PoseGoal <{self._name}> with params:\n'
             f'-> Entity: {self._entity.name}\n'
             f'-> Position: {self._position}\n'
@@ -77,7 +77,7 @@ class PositionGoal(Goal):
         self._deviation = deviation
 
     def on_enter(self):
-        self.log_info(
+        self.log_debug(
             f'Starting PositionGoal <{self._name}> with params:\n'
             f'-> Entity: {self._entity.name}\n'
             f'-> Position: {self._position}\n'
@@ -125,7 +125,7 @@ class OrientationGoal(Goal):
         self._deviation = deviation
 
     def on_enter(self):
-        self.log_info(
+        self.log_debug(
             f'Starting OrientationGoal <{self._name}> with params:\n'
             f'-> Entity: {self._entity.name}\n'
             f'-> Orientation: {self._orientation}\n'

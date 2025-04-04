@@ -23,7 +23,7 @@ class WaypointTrajectoryGoal(Goal):
         self._waypoints_reached_map = [False] * len(waypoints)
 
     def on_enter(self):
-        self.log_info(
+        self.log_debug(
             f'Starting PositionGoal <{self._name}> with params:\n'
             f'-> Entity: {self._entity.name}\n'
             f'-> Waypoints: {self._waypoints}\n'

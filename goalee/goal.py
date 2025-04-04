@@ -28,7 +28,7 @@ class Goal:
                  min_duration: Optional[float] = None,
                  for_duration: Optional[float] = None):
         self._rtmonitor: RTMonitor = None
-        self._state = None
+        self._state: GoalState = None
         self._ee = event_emitter
         self._max_duration: float = max_duration
         self._min_duration: float = min_duration
@@ -52,6 +52,12 @@ class Goal:
             'name': self._name,
             'type': self.__class__.__name__,
             'state': self._state.name,
+            'max_duration': self._max_duration,
+            'min_duration': self._min_duration,
+            'for_duration': self._for_duration,
+            'elapsed': self.duration,
+            'ts_start': self._ts_start,
+            'ts_exit': self._ts_exit,
             'entities': [entity.name for entity in self._entities]
         }
 
@@ -117,7 +123,7 @@ class Goal:
         self._rtmonitor.send_event(event)
 
     def _report_state(self):
-        self.log_info(f'Goal <{self.__class__.__name__}:{self.name}> entered {self.state.name} state ' +
+        self.log_debug(f'Goal <{self.__class__.__name__}:{self.name}> entered {self.state.name} state ' +
               f'(maxT={self._max_duration}, minT={self._min_duration}. forT={self._for_duration})')
 
     def enter(self, rtmonitor: RTMonitor = None):
@@ -180,7 +186,7 @@ class Goal:
             elif elapsed > self._max_duration:
                 self._duration = elapsed
                 self.set_state(GoalState.FAILED)
-                self.log_info(
+                self.log_warning(
                     f'Goal <{self.__class__.__name__}:{self._name}> exited due' + \
                     f' to timeout after {self._max_duration} seconds!')
                 break

@@ -61,6 +61,12 @@ class ComplexGoal(Goal):
         for goal in self._goals:
             goal.set_tick_freq(freq)
 
+    def serialize(self):
+        return super().serialize().update({
+            'algorithm': self._algorithm.name,
+            'goals': [goal.serialize() for goal in self._goals],
+        })
+
     def enter(self, rtmonitor: RTMonitor = None):
         self.set_state(GoalState.RUNNING)
         self.on_enter()
@@ -81,13 +87,13 @@ class ComplexGoal(Goal):
         return self
 
     def on_enter(self):
-        self.log_info(f'Starting ComplexGoal <{self._name}>:\n'
-                      f"Parameters:\n"
-                      f"  Algorithm: {self._algorithm.name}\n"
-                      f"  X-Accomplished: {self._x_accomplished}\n"
-                      f"  Max Duration: {self._max_duration}\n"
-                      f"  Min Duration: {self._min_duration}\n"
-                      f"Internal Goals: {[f'{g.__class__.__name__}:{g.name}' for g in self._goals]}")
+        self.log_debug(f'Starting ComplexGoal <{self._name}>:\n'
+                       f"Parameters:\n"
+                       f"  Algorithm: {self._algorithm.name}\n"
+                       f"  X-Accomplished: {self._x_accomplished}\n"
+                       f"  Max Duration: {self._max_duration}\n"
+                       f"  Min Duration: {self._min_duration}\n"
+                       f"Internal Goals: {[f'{g.__class__.__name__}:{g.name}' for g in self._goals]}")
         self._ts_start = self.get_current_ts()
 
         if self._algorithm in (ComplexGoalAlgorithm.ALL_ACCOMPLISHED_ORDERED,
@@ -98,7 +104,7 @@ class ComplexGoal(Goal):
 
         self.calc_result()
 
-        self.log_info(
+        self.log_debug(
             f'Finished ComplexGoal <{self.__class__.__name__}:{self._name}>\n'
             f'  Mode {self._algorithm.name}\n'
             f'  Results: {self._get_results_list()}'
@@ -135,7 +141,7 @@ class ComplexGoal(Goal):
                     goal = f.result()
                     if goal.state == GoalState.COMPLETED and \
                         self._algorithm == ComplexGoalAlgorithm.AT_LEAST_ONE_ACCOMPLISHED:
-                        self.log_info(f"Goal <ComplexGoal:{goal.name}> reached at least one accomplished")
+                        self.log_debug(f"Goal <ComplexGoal:{goal.name}> reached at least one accomplished")
                         self.terminate_all_goals()
                         break
                 except Exception as e:
@@ -211,11 +217,11 @@ class ComplexGoal(Goal):
         if self._max_duration is not None:
             if (goal._max_duration is None or goal._max_duration > self._max_duration) and self._max_duration is not None:
                 goal._max_duration = self._max_duration
-                self.log_info(f'Goal <{goal.__class__.__name__}:{goal.name}> max duration set to {self._max_duration}')
+                self.log_debug(f'Goal <{goal.__class__.__name__}:{goal.name}> max duration set to {self._max_duration}')
         if self._min_duration is not None:
             if (goal._min_duration is None or goal._min_duration < self._min_duration) and self._min_duration is not None:
                 goal._min_duration = self._min_duration
-                self.log_info(f'Goal <{goal.__class__.__name__}:{goal.name}> min duration set to {self._min_duration}')
+                self.log_debug(f'Goal <{goal.__class__.__name__}:{goal.name}> min duration set to {self._min_duration}')
         self._goals.append(goal)
 
     def set_comm_node(self, comm_node: Node):

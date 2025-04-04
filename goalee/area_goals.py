@@ -52,7 +52,7 @@ class RectangleAreaGoal(Goal):
         return self._tag
 
     def on_enter(self):
-        self.log_info(
+        self.log_debug(
             f'Starting RectangleAreaGoal <{self._name}> with params:\n'
             f'-> Monitoring Entities: {[e.name for e in self._entities]}\n'
             f'-> Bottom Left Edge: {self._bottom_left_edge}\n'
@@ -129,7 +129,7 @@ class CircularAreaGoal(Goal):
         return self._tag
 
     def on_enter(self):
-        self.log_info(
+        self.log_debug(
             f'Starting CircularAreaGoal <{self._name}> with params:\n'
             f'-> Monitoring Entities: {[e.name for e in self._entities]}\n'
             f'-> Center: {self._center}\n'
@@ -225,7 +225,7 @@ class MovingAreaGoal(Goal):
         return self._tag
 
     def on_enter(self):
-        self.log_info("Starting CircularAreaGoal <{}> with params:\n"
+        self.log_debug("Starting CircularAreaGoal <{}> with params:\n"
                     "-> Motion Entity: {}\n"
                     "-> Monitoring Entities: {}\n"
                     "-> Radius: {}\n"

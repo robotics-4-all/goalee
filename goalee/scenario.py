@@ -43,17 +43,7 @@ class Scenario:
         n_threads = len(self._fatal_goals + self._goals + self._anti_goals) + 1
         self._thread_executor = ThreadPoolExecutor(n_threads)
 
-        if self._goal_weights is None:
-            self._goal_weights = [1.0 / len(self._goals)] * len(self._goals)
-        elif len(self._goal_weights) != len(self._goals):
-            self.log_warning("Goal weights length does not match the number of goals. Initializing to equal weights.")
-            self._goal_weights = [1.0 / len(self._goals)] * len(self._goals)
-        if self._antigoal_weights is None:
-            if len(self._anti_goals) > 0:
-                self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(self._anti_goals)
-        elif len(self._antigoal_weights) != len(self._anti_goals):
-            self.log_warning("Anti-goal weights length does not match the number of anti-goals. Initializing to equal weights.")
-            self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(self._anti_goals)
+        self._update_goal_weights()
 
         for goal in self._goals:
             goal.set_tick_freq(self._goal_tick_freq_hz)
@@ -143,7 +133,7 @@ class Scenario:
         )
         return node
 
-    def add_goal(self, goal: Goal):
+    def add_goal(self, goal: Goal, weight=None):
         """
         Adds a goal to the list of goals.
 
@@ -151,6 +141,25 @@ class Scenario:
             goal (Goal): The goal to be added to the list.
         """
         self._goals.append(goal)
+        if weight is not None:
+            if self._goal_weights is None:
+                self._goal_weights = []
+            self._goal_weights.append(weight)
+        self._update_goal_weights()
+
+    def _update_goal_weights(self):
+        if self._goal_weights is None:
+            if len(self._goals) > 0:
+                self._goal_weights = [1.0 / len(self._goals)] * len(self._goals)
+        elif len(self._goal_weights) != len(self._goals):
+            self.log_warning("Goal weights length does not match the number of goals. Initializing to equal weights.")
+            self._goal_weights = [1.0 / len(self._goals)] * len(self._goals)
+        if self._antigoal_weights is None:
+            if len(self._anti_goals) > 0:
+                self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(self._anti_goals)
+        elif len(self._antigoal_weights) != len(self._anti_goals):
+            self.log_warning("Anti-goal weights length does not match the number of anti-goals. Initializing to equal weights.")
+            self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(self._anti_goals)
 
     def start_entities(self, goals: List[Goal] = None) -> None:
         """
@@ -306,14 +315,14 @@ class Scenario:
                 goal.terminate()
 
     def on_fatal(self, f):
-        self.log_error(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state}")
+        self.log_warning(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state}")
         self.terminate_all_goals()
 
     def on_goal(self, f):
-        self.log_info(f"Goal <{f.result().name}> exited with state: {f.result().state}")
+        self.log_debug(f"Goal <{f.result().name}> exited with state: {f.result().state}")
 
     def on_antigoal(self, f):
-        self.log_info(f"AntiGoal <{f.result().name}> exited with state: {f.result().state}")
+        self.log_debug(f"AntiGoal <{f.result().name}> exited with state: {f.result().state}")
 
     def stop_thread_executor(self, wait: bool = False, force: bool = True):
         try:

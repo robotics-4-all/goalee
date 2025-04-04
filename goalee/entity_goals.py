@@ -37,7 +37,7 @@ class EntityStateChange(Goal):
         self._last_state = self.entity.attributes.copy()
 
     def on_enter(self):
-        self.log_info(
+        self.log_debug(
             f"Starting EntityStateChange Goal <{self.name}>:\n"
             f"Entity: {self.entity.name}\n"
             f"Max Duration: {self._max_duration}\n"
@@ -79,7 +79,7 @@ class EntityStateCondition(Goal):
         return {e.name: e for e in self._entities}
 
     def on_enter(self):
-        self.log_info(
+        self.log_debug(
             f"Starting EntityStateCondition Goal <{self.name}>:\n"
             f"Parameters:\n"
             f"  Condition: {self._condition}\n"
@@ -193,7 +193,7 @@ class EntityAttrStream(Goal):
         self._value_check_list = [False] * len(self._value)
 
     def on_enter(self):
-        self.log_info(
+        self.log_debug(
             f"Starting EntityAttrStream Goal <{self.name}>:\n"
             f"Attribute: {self._attr}\n"
             f"Value: {self._value}\n"

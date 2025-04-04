@@ -117,7 +117,7 @@ class Entity:
         self._started = True
         self.create_node()
         self.node.run()
-        logger.info(f"Started Entity <{self.name}> listening on topic <{self.topic}>")
+        logger.debug(f"Started Entity <{self.name}> listening on topic <{self.topic}>")
 
     def update_state(self, new_state: Dict[str, Any]) -> None:
         """

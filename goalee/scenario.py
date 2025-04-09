@@ -226,7 +226,6 @@ class Scenario:
         if self._rtmonitor:
             self.send_scenario_finished("sequential")
 
-        self.terminate_fatal_goals()
         self.terminate_all_goals()
         self.stop_thread_executor()
 
@@ -258,24 +257,14 @@ class Scenario:
         self.start_fatal_goals()
         self.start_antigoals()
 
-        futures = []
-        for goal in self._goals:
-            future = self._thread_executor.submit(goal.enter, )
-            futures.append(future)
-        for f in as_completed(futures):
-            try:
-                f.result()
-                self.send_scenario_update("concurrent")
-            except Exception as e:
-                self.log_error(f"Error in goal execution: {e}")
+        self.start_goals_and_wait()
+        self.terminate_all_goals()
 
         self.print_results()
 
         if self._rtmonitor:
             self.send_scenario_finished("concurrent")
 
-        self.terminate_fatal_goals()
-        self.terminate_all_goals()
         self.stop_thread_executor()
 
         if self._node:
@@ -289,6 +278,17 @@ class Scenario:
             futures.append(future)
         for future in futures:
             future.add_done_callback(self.on_goal)
+        return futures
+
+    def start_goals_and_wait(self):
+        futures = self.start_goals()
+        for f in as_completed(futures):
+            try:
+                f.result()
+                self.send_scenario_update("concurrent")
+            except Exception as e:
+                self.log_error(f"Error in goal execution: {e}")
+        return futures
 
     def start_fatal_goals(self):
         futures = []
@@ -312,20 +312,31 @@ class Scenario:
                 goal.terminate()
 
     def terminate_all_goals(self):
-        for goal in self._goals + self._anti_goals:
+        self.terminate_antigoals()
+        self.terminate_goals()
+        self.terminate_fatal_goals()
+
+    def terminate_goals(self):
+        for goal in self._goals:
+            if goal.state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
+                goal.terminate()
+
+    def terminate_antigoals(self):
+        for goal in self._anti_goals:
             if goal.state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
                 goal.terminate()
 
     def on_fatal(self, f):
-        self.log_warning(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state.name}")
-        self.terminate_all_goals()
-        self.terminate_fatal_goals()
+        result = f.result()
+        if result.state == GoalState.COMPLETED:
+            self.log_warning(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state.name}")
+            self.terminate_all_goals()
 
     def on_goal(self, f):
-        self.log_debug(f"Goal <{f.result().name}> exited with state: {f.result().state.name}")
+        self.log_info(f"Goal <{f.result().name}> exited with state: {f.result().state.name}")
 
     def on_antigoal(self, f):
-        self.log_debug(f"AntiGoal <{f.result().name}> exited with state: {f.result().state.name}")
+        self.log_info(f"AntiGoal <{f.result().name}> exited with state: {f.result().state.name}")
 
     def stop_thread_executor(self, wait: bool = False, force: bool = True):
         try:
@@ -367,7 +378,7 @@ class Scenario:
             "elapsed_time": self.get_current_ts() - self._start_ts
         }
         event = EventMsg(type="scenario_started", data=msg_data)
-        self.log_debug(f'Sending scenario started event: {event}')
+        self.log_info(f'Sending scenario started event')
         self._rtmonitor.send_event(event)
 
     def send_scenario_update(self, execution: str):
@@ -386,7 +397,7 @@ class Scenario:
             "elapsed_time": self.get_current_ts() - self._start_ts
         }
         event = EventMsg(type="scenario_update", data=msg_data)
-        self.log_debug(f'Sending scenario update event: {event}')
+        self.log_info('Sending scenario update event')
         self._rtmonitor.send_event(event)
 
     def send_scenario_finished(self, execution: str):
@@ -406,7 +417,7 @@ class Scenario:
             "elapsed_time": self.get_current_ts() - self._start_ts
         }
         event = EventMsg(type="scenario_finished", data=msg_data)
-        self.log_debug(f'Sending scenario finished event: {event}')
+        self.log_info(f'Sending scenario finished event')
         self._rtmonitor.send_event(event)
 
     def make_result_list(self):

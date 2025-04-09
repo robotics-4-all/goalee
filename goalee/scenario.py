@@ -367,7 +367,7 @@ class Scenario:
             "elapsed_time": self.get_current_ts() - self._start_ts
         }
         event = EventMsg(type="scenario_started", data=msg_data)
-        self.log_info(f'Sending scenario started event: {event}')
+        self.log_debug(f'Sending scenario started event: {event}')
         self._rtmonitor.send_event(event)
 
     def send_scenario_update(self, execution: str):
@@ -386,7 +386,7 @@ class Scenario:
             "elapsed_time": self.get_current_ts() - self._start_ts
         }
         event = EventMsg(type="scenario_update", data=msg_data)
-        self.log_info(f'Sending scenario update event: {event}')
+        self.log_debug(f'Sending scenario update event: {event}')
         self._rtmonitor.send_event(event)
 
     def send_scenario_finished(self, execution: str):
@@ -406,7 +406,7 @@ class Scenario:
             "elapsed_time": self.get_current_ts() - self._start_ts
         }
         event = EventMsg(type="scenario_finished", data=msg_data)
-        self.log_info(f'Sending scenario finished event: {event}')
+        self.log_debug(f'Sending scenario finished event: {event}')
         self._rtmonitor.send_event(event)
 
     def make_result_list(self):

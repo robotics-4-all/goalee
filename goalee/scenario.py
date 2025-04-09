@@ -319,6 +319,7 @@ class Scenario:
     def on_fatal(self, f):
         self.log_warning(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state.name}")
         self.terminate_all_goals()
+        self.terminate_fatal_goals()
 
     def on_goal(self, f):
         self.log_debug(f"Goal <{f.result().name}> exited with state: {f.result().state.name}")

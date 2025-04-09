@@ -317,14 +317,14 @@ class Scenario:
                 goal.terminate()
 
     def on_fatal(self, f):
-        self.log_warning(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state}")
+        self.log_warning(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state.name}")
         self.terminate_all_goals()
 
     def on_goal(self, f):
-        self.log_debug(f"Goal <{f.result().name}> exited with state: {f.result().state}")
+        self.log_debug(f"Goal <{f.result().name}> exited with state: {f.result().state.name}")
 
     def on_antigoal(self, f):
-        self.log_debug(f"AntiGoal <{f.result().name}> exited with state: {f.result().state}")
+        self.log_debug(f"AntiGoal <{f.result().name}> exited with state: {f.result().state.name}")
 
     def stop_thread_executor(self, wait: bool = False, force: bool = True):
         try:

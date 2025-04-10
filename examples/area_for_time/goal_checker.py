@@ -49,10 +49,12 @@ if __name__ == '__main__':
                            bottom_left_edge=Point(0.0, 0.0),
                            length_x=5.0,
                            length_y=5.0,
+                           for_duration=5.0,
                            max_duration=30.0)
     g2 = CircularAreaGoal(entities=[RobotPose, FrontSonar],
                           center=Point(6.0, 6.0),
                           radius=5.0,
+                          for_duration=5.0,
                           max_duration=30.0)
     t.add_goal(g1)
     t.add_goal(g2)

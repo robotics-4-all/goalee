@@ -7,13 +7,14 @@ from typing import Dict
 from commlib.msg import PubSubMessage, MessageHeader
 from pydantic import Field
 from commlib.node import Node
-from commlib.transports.mqtt import ConnectionParameters
+from commlib.transports.redis import ConnectionParameters
 
 
 """_summary_
 This example demonstrates how to create a simple robot that moves to a specific position.
 The robot's position is published to the `robot_1.pose` topic.
 """
+
 
 
 class PoseMessage(PubSubMessage):
@@ -98,14 +99,21 @@ class Robot(Node):
 
 
 if __name__ == '__main__':
-    conn_params = ConnectionParameters(reconnect_attempts=0)
+    conn_params = ConnectionParameters()
 
     robot_1 = Robot(name='robot_1', connection_params=conn_params,
                     pose_uri='robot_1.pose', heartbeats=False)
 
     try:
         robot_1.run()
-        robot_1.move(3, 3)
+        robot_1.move(2, 0)
+        robot_1.move(4, 0)
+        robot_1.move(6, 0)
+        robot_1.move(8, 0)
+        robot_1.move(8, 2)
+        robot_1.move(8, 4)
+        robot_1.move(8, 6)
+        robot_1.move(8, 8)
         robot_1.stop()
     except KeyboardInterrupt:
         robot_1.stop()

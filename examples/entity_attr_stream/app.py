@@ -9,7 +9,7 @@ from commlib.node import Node
 
 class SonarMessage(PubSubMessage):
     header: MessageHeader = MessageHeader()
-    range: float = -1
+    range: float = 0.0
     hfov: float = 30.6
     vfov: float = 14.2
 

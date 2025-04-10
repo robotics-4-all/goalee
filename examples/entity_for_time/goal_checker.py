@@ -34,30 +34,30 @@ if __name__ == '__main__':
         source=broker
     )
 
-    g1 = EntityStateChange(entity=FrontSonar,
-                           max_duration=10.0)
+    scenario = Scenario("Scenario_1", broker)
+
+    g1 = EntityStateChange(
+        entity=FrontSonar,
+        max_duration=15.0
+    )
     g2 = EntityStateCondition(
         entities=[FrontSonar],
-        max_duration=10.0,
+        max_duration=5.0,
+        for_duration=5,
         condition=lambda entities: True if
-            entities['front_sonar'].attributes['range'] > 5 else False
+        entities['front_sonar'].attributes['range'] > 5 else False
     )
     FrontSonar.init_attr_buffer("range", 10)
-
     g3 = EntityStateCondition(
         entities=[FrontSonar],
         max_duration=10.0,
         condition=lambda entities: True if
-            mean(entities['front_sonar'].get_buffer('range', 5)) > 5 else False
+        mean(entities['front_sonar'].get_buffer('range', 5)) > 5 else False
     )
-
-    scenario = Scenario(
-        name="Scenario_1",
-        broker=broker,
-        goals=[g1, g2, g3],
-    )
+    scenario.add_goal(g1)
+    scenario.add_goal(g2)
+    scenario.add_goal(g3)
     etopic = f'monitor.{scenario.name}.event'
     ltopic = f'monitor.{scenario.name}.log'
     scenario.init_rtmonitor(etopic, ltopic)
-
-    scenario.run_seq()
+    scenario.run_concurrent()

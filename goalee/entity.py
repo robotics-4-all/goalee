@@ -1,23 +1,29 @@
 from collections import deque
-from typing import Any, List
+from typing import Any, Dict, List
 
 from commlib.node import Node
+from goalee.logging import default_logger as logger
 
 
 # A class representing an entity communicating via an MQTT broker on a specific topic
 class Entity:
-    def __init__(self, name: str, etype: str, topic: str,
-                 attributes: List[str], source=None,
+    def __init__(self, name: str,
+                 etype: str,
+                 topic: str,
+                 attributes: List[str],
+                 source=None,
                  init_buffers: bool = False,
-                 buffer_length: int = 10) -> None:
+                 buffer_length: int = 10,
+                 strict_mode: bool = False) -> None:
         # Entity name
         self.name = name
         self.camel_name = self.to_camel_case(name)
         self.etype = etype
         # MQTT topic for Entity
         self.topic = topic
+        self._strict = strict_mode
         # Entity state
-        self.state = {}
+        self.state = None
         # Set Entity's MQTT Broker
         self.source = source
         # Entity's Attributes
@@ -27,14 +33,29 @@ class Entity:
         if init_buffers:
             for attr in self.attributes:
                 self.init_attr_buffer(attr, self.buffer_length)
+        self._initialized = False
+        self._started = False
+
+    @property
+    def initialized(self):
+        return self._initialized
+
+    def __getitem__(self, key):
+        # Allow dictionary-style access to attributes
+        # return getattr(self, key)
+        return self.attributes[key]
 
     def get_buffer(self, attr_name: str, size: int = None):
         size = size if size is not None else self.attributes_buff[attr_name].maxlen
         if len(self.attributes_buff[attr_name]) != \
             self.attributes_buff[attr_name].maxlen:
-            return [0] * size
+            buffer = [0] * size
         else:
-            return self.attributes_buff[attr_name]
+            buffer = list(self.attributes_buff[attr_name])[-size:]
+        return buffer
+
+    def get_attr(self, attr_name: str) -> Any:
+        return self.attributes[attr_name]
 
     def init_attr_buffer(self, attr_name, size):
         self.attributes_buff[attr_name] = deque(maxlen=size)
@@ -70,7 +91,7 @@ class Entity:
                 host=self.source.host,
                 port=self.source.port,
                 username=self.source.username,
-                password=self.source.password
+                password=self.source.password,
             )
         else:
             raise ValueError('Invalid broker type')
@@ -78,24 +99,27 @@ class Entity:
 
         self.node = Node(node_name=self.camel_name,
                          connection_params=self.conn_params,
-                         debug=False)
-
-    def start(self):
-        # Create and start communications subscriber on Entity's topic
-        self.create_node()
+                         debug=False, heartbeats=False)
         self.subscriber = self.node.create_subscriber(
             topic=self.topic,
             on_message=self.update_state
         )
-        self.subscriber.run()
 
-        # Create communications publisher on Entity's topic
-        self.publisher = self.node.create_publisher(
-            topic=self.topic,
-        )
+    def start(self):
+        """
+        Starts the entity by creating a node, setting up a subscriber to listen to messages on the entity's topic,
+        and running the subscriber. Additionally, it creates a publisher for communications on the same topic.
 
-    # Callback function for updating Entity state and triggering automations evaluation
-    def update_state(self, new_state):
+        The subscriber will call the `update_state` method whenever a message is received on the topic.
+        """
+        if self._started:
+            return
+        self._started = True
+        self.create_node()
+        self.node.run()
+        logger.info(f"Started Entity <{self.name}> listening on topic <{self.topic}>")
+
+    def update_state(self, new_state: Dict[str, Any]) -> None:
         """
         Function for updating Entity state. Meant to be used as a callback function by the Entity's subscriber object
         (commlib-py).
@@ -103,10 +127,23 @@ class Entity:
         :return:
         """
         # Update state
-        self.state = new_state
+        # logger.info(f'[Entity {self.name}] State Change')
+        state = new_state.copy()
+        for key in state:
+            if key not in self.attributes:
+                # logger.warning(
+                #     f"Entity <{self.name}> state - Message KeyError <{key}>\n"
+                # )
+                if self._strict:
+                    logger.warning(f"Entity <{self.name}> in strict mode - Dropping invalid message")
+                    return
+                else:
+                    continue
+        self._initialized = True
+        self.state = state
         # Update attributes based on state
-        self.update_attributes(new_state)
-        self.update_buffers(new_state)
+        self.update_attributes(state)
+        self.update_buffers(state)
 
     def update_buffers(self, new_state):
         """
@@ -114,9 +151,14 @@ class Entity:
             dictionaries/objects and normal Attributes.
         """
         # Update attributes
-        for attribute, value in new_state.items():
+        state = new_state.copy()
+        for key in state:
+            if self._strict and key not in self.attributes:
+                logger.warning(f"Entity <{self.name}> in strict mode - Dropping invalid message")
+                return
+        for attribute, value in state.items():
             # If value is a dictionary, also update the Dict's subattributes/items
-            if self.attributes_buff[attribute] is not None:
+            if attribute in self.attributes and self.attributes_buff[attribute] is not None:
                 self.attributes_buff[attribute].append(value)
 
     def update_attributes(self, new_state):

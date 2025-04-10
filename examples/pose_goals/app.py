@@ -16,6 +16,7 @@ The robot's position is published to the `robot_1.pose` topic.
 """
 
 
+
 class PoseMessage(PubSubMessage):
     # header: MessageHeader = MessageHeader()
     position: Dict[str, float] = Field(
@@ -105,7 +106,9 @@ if __name__ == '__main__':
 
     try:
         robot_1.run()
-        robot_1.move(3, 3)
+        robot_1.move(5, 0)
+        robot_1.move(5, 5)
+        robot_1.turn(0.5)
         robot_1.stop()
     except KeyboardInterrupt:
         robot_1.stop()

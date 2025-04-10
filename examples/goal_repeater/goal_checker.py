@@ -3,6 +3,7 @@
 from statistics import mean
 from goalee import Scenario, MQTTBroker, RedisBroker
 from goalee.entity_goals import EntityStateChange, EntityStateCondition
+from goalee.repeater import GoalRepeater
 
 from goalee.entity import Entity
 
@@ -34,30 +35,22 @@ if __name__ == '__main__':
         source=broker
     )
 
-    g1 = EntityStateChange(entity=FrontSonar,
-                           max_duration=10.0)
-    g2 = EntityStateCondition(
-        entities=[FrontSonar],
-        max_duration=10.0,
-        condition=lambda entities: True if
-            entities['front_sonar'].attributes['range'] > 5 else False
+    g1 = EntityStateChange(
+        name="FrontSonarData",
+        entity=FrontSonar,
+        max_duration=10.0
     )
-    FrontSonar.init_attr_buffer("range", 10)
 
-    g3 = EntityStateCondition(
-        entities=[FrontSonar],
-        max_duration=10.0,
-        condition=lambda entities: True if
-            mean(entities['front_sonar'].get_buffer('range', 5)) > 5 else False
-    )
+    repeater = GoalRepeater(g1, 10, max_duration=30, min_duration=0)
+    # repeater = GoalRepeater(g1, 10, max_duration=5, min_duration=0)  # This will fail
 
     scenario = Scenario(
         name="Scenario_1",
         broker=broker,
-        goals=[g1, g2, g3],
+        goals=[repeater]
     )
+
     etopic = f'monitor.{scenario.name}.event'
     ltopic = f'monitor.{scenario.name}.log'
     scenario.init_rtmonitor(etopic, ltopic)
-
     scenario.run_seq()

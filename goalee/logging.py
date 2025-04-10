@@ -1,12 +1,10 @@
 import logging
-import os
-from rich.logging import RichHandler
+from goalee import definitions as CONFIG
 
-LOGGING_FORMAT = "%(message)s"
-LOG_LEVEL = os.getenv("GOALDSL_LOG_LEVEL", "INFO")
-
-logging.basicConfig(
-    level=LOG_LEVEL, format=LOGGING_FORMAT, datefmt="[%X]", handlers=[RichHandler()]
-)
+# Set up logging
+logging.basicConfig(format="%(asctime)s - %(message)s")
+if CONFIG.ZERO_LOGS: logging.disable()
+else: logging.getLogger().setLevel(CONFIG.LOG_LEVEL)
+# -------------------------------------------------------------
 
 default_logger = logging.getLogger()

@@ -248,8 +248,7 @@ class TestEntityCreateNode:
         broker = RedisBroker(host="redis-host", port=6380, db=1)
         e = Entity(name="e", etype="t", topic="t", attributes=["a"], source=broker)
 
-        with patch("commlib.transports.redis.ConnectionParameters") as mock_cp:
-            mock_cp.return_value = MagicMock()
+        with patch.dict("sys.modules", {"commlib.transports.redis": MagicMock()}):
             e.create_node()
 
         assert e.node is mock_node
@@ -274,8 +273,7 @@ class TestEntityCreateNode:
         broker = MQTTBroker(host="mqtt-host", port=1884)
         e = Entity(name="e", etype="t", topic="t", attributes=["a"], source=broker)
 
-        with patch("commlib.transports.mqtt.ConnectionParameters") as mock_cp:
-            mock_cp.return_value = MagicMock()
+        with patch.dict("sys.modules", {"commlib.transports.mqtt": MagicMock()}):
             e.create_node()
 
         assert e.node is mock_node
@@ -289,8 +287,7 @@ class TestEntityStart:
         broker = RedisBroker()
         e = Entity(name="e", etype="t", topic="t", attributes=["a"], source=broker)
 
-        with patch("commlib.transports.redis.ConnectionParameters") as mock_cp:
-            mock_cp.return_value = MagicMock()
+        with patch.dict("sys.modules", {"commlib.transports.redis": MagicMock()}):
             e.start()
 
         assert e._started is True
@@ -303,8 +300,7 @@ class TestEntityStart:
         broker = RedisBroker()
         e = Entity(name="e", etype="t", topic="t", attributes=["a"], source=broker)
 
-        with patch("commlib.transports.redis.ConnectionParameters") as mock_cp:
-            mock_cp.return_value = MagicMock()
+        with patch.dict("sys.modules", {"commlib.transports.redis": MagicMock()}):
             e.start()
             e.start()
 

@@ -82,7 +82,12 @@ class GoalRepeater(Goal):
                 break
             self._goal.reset()
         elapsed = self.get_current_elapsed()
-        if self._max_duration not in (None, 0) and elapsed > self._max_duration or self._min_duration not in (None, 0) and elapsed < self._min_duration:
+        if (
+            self._max_duration not in (None, 0)
+            and elapsed > self._max_duration
+            or self._min_duration not in (None, 0)
+            and elapsed < self._min_duration
+        ):
             self.set_state(GoalState.FAILED)
         elif self._state == GoalState.RUNNING:
             self.set_state(

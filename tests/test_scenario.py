@@ -690,22 +690,24 @@ def test_add_goal_weight_initializes_list():
 def test_create_comm_node_redis():
     from goalee.brokers import RedisBroker
 
-    with patch("goalee.scenario.Node") as MockNode:
-        MockNode.return_value = MagicMock()
-        s = Scenario(name="s", broker=RedisBroker())
-        assert s._node is not None
-        MockNode.assert_called_once()
+    with patch.dict("sys.modules", {"commlib.transports.redis": MagicMock()}):  # noqa: SIM117
+        with patch("goalee.scenario.Node") as MockNode:
+            MockNode.return_value = MagicMock()
+            s = Scenario(name="s", broker=RedisBroker())
+            assert s._node is not None
+            MockNode.assert_called_once()
 
 
 def test_create_comm_node_mqtt():
     from goalee.brokers import MQTTBroker
 
     s = Scenario(name="s", broker=None)
-    with patch("goalee.scenario.Node") as MockNode:
-        MockNode.return_value = MagicMock()
-        result = s._create_comm_node(MQTTBroker())
-        assert result is not None
-        MockNode.assert_called_once()
+    with patch.dict("sys.modules", {"commlib.transports.mqtt": MagicMock()}):  # noqa: SIM117
+        with patch("goalee.scenario.Node") as MockNode:
+            MockNode.return_value = MagicMock()
+            result = s._create_comm_node(MQTTBroker())
+            assert result is not None
+            MockNode.assert_called_once()
 
 
 def test_creation_with_broker_creates_node():

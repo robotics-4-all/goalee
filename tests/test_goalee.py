@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from unittest.mock import MagicMock, patch
+
 import goalee
 from goalee import AMQPBroker, Broker, Entity, MQTTBroker, RedisBroker, Scenario
 from goalee.complex_goal import ComplexGoalAlgorithm
@@ -76,7 +78,8 @@ def test_orientation_operations():
 
 def test_scenario_creation():
     broker = RedisBroker()
-    scenario = Scenario(name="test_scenario", broker=broker)
+    with patch.object(Scenario, "_create_comm_node", return_value=MagicMock()):
+        scenario = Scenario(name="test_scenario", broker=broker)
     assert scenario.name == "test_scenario"
 
 

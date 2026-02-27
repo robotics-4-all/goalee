@@ -1,77 +1,73 @@
 # goalee
 
-Goalee is a Python 3.5+ library that implements several concepts of [GoalDSL](https://github.com/robotics-4-all/goal-dsl) and it is used by
-the code generator to produce the source code from a given Goaldsl model.
-Goalee can also be used as a standalone Python library for implementing goal-driven targets for applications.
+Goalee is a Python 3.9+ library that implements goal-driven runtime verification for Cyber-Physical Systems. Part of the [GoalDSL](https://github.com/robotics-4-all/goal-dsl) ecosystem, it is used by the code generator to produce source code from a given GoalDSL model. Goalee can also be used as a standalone Python library.
 
+## Installation
 
-# Table of contents
-1. [Installation](#installation)
-2. [Quick Start](#quickstart)
-2. [Examples](#examples)
+Install from PyPI:
 
-## Installation <a name="installation"></a>
-
-Download this repository and simply install using `pip` package manager.
-
+```bash
+pip install goalee
 ```
+
+Or install from source:
+
+```bash
 git clone https://github.com/robotics-4-all/goalee
 cd goalee
 pip install .
 ```
 
+For development:
 
-## Quick Start <a name="quickstart"></a>
-
-
-The source code of a goal validator is shown below. Two Goals are defined,
-a `TopicMessageParamGoal` and a `TopicMessageReceivedGoal`.
-
-```
-#!/usr/bin/env python3
-
-from goalee import Target, RedisMiddleware
-from goalee.topic_goals import TopicMessageReceivedGoal, TopicMessageParamGoal
-
-
-if __name__ == '__main__':
-    middleware = RedisMiddleware()
-    t = Target(middleware)
-
-    g1 = TopicMessageReceivedGoal(topic='sensors.sonar.front',
-                                  max_duration=10.0)
-    g2 = TopicMessageParamGoal(topic='sensors.sonar.front',
-                               max_duration=10.0,
-                               condition=lambda msg: True if msg['range'] > 5 \
-                               else False)
-    t.add_goal(g1)
-    t.add_goal(g2)
-
-    t.run_seq()
+```bash
+pip install -e ".[dev,test]"
 ```
 
-The first goal waits for a message to be received at topic
-`sensors.sonar.front`, for a maximum duration of 10 seconds, while the second
-goal uses a condition to filter messages arrived at `sensors.sonar.front`. In
-this example `g2` completes when a message that satisfies the condition `range > 5` arrives.
-Conditions are defined using `lambda` functions in Python.
+## Quick Start
 
-After creation of goal instances, you have to create a target and add goals to
-it. Target requires a Middleware to connect to and listen to topics. In the
-above example a local Redis is used as the communication middleware.
+The following example defines two goals that monitor entity state via a Redis broker:
 
+```python
+from goalee import Scenario, RedisBroker, Entity
+from goalee.entity_goals import EntityStateCondition
+
+broker = RedisBroker(host="localhost", port=6379)
+
+front_sonar = Entity(
+    name="FrontSonar",
+    etype="sensor",
+    topic="sensors.sonar.front",
+    attributes=["range", "hfov", "vfov"],
+    source=broker,
+)
+
+g1 = EntityStateCondition(
+    name="sonar_range_check",
+    entities=[front_sonar],
+    condition=lambda entities: entities["FrontSonar"]["range"] > 5,
+    max_duration=10.0,
+)
+
+scenario = Scenario(name="my_scenario", broker=broker, goals=[g1])
+scenario.run_seq()
 ```
-middleware = RedisMiddleware()
-t = Target(middleware)
 
-```
+Goals are evaluated by subscribing to entity data via pub/sub messaging (Redis, MQTT, or AMQP). Scenarios can be executed in **Sequential** (`run_seq()`) or **Concurrent** (`run_concurrent()`) mode.
 
-Targets can be executed in **Concurrent** (`t.run_concurrent()`) or **Sequential** (`t.run_seq()`) mode. In sequential
-mode goals are executed in the order they were added using the `add_goal`
-method.
+## Goal Types
 
+- **EntityStateChange** / **EntityStateCondition** / **EntityAttrStream** — entity data monitoring
+- **RectangleAreaGoal** / **CircularAreaGoal** / **MovingAreaGoal** — spatial/geometric checks
+- **PoseGoal** / **PositionGoal** / **OrientationGoal** — pose verification
+- **WaypointTrajectoryGoal** — waypoint trajectory tracking
+- **ComplexGoal** — composite goals with algorithms (ALL, NONE, AT_LEAST_ONE, EXACTLY_X)
+- **GoalRepeater** — run any goal N times
 
-## Examples <a name="examples"></a>
+## Examples
 
-Several examples can be found [here](./examples/).
+Several examples can be found in the [examples/](./examples/) directory.
 
+## License
+
+MIT

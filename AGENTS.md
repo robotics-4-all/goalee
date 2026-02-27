@@ -1,7 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
 **Generated:** 2026-02-27
-**Commit:** 28e8ef7
+**Commit:** 8a437af
 **Branch:** devel
 
 ## OVERVIEW
@@ -14,7 +14,7 @@ Python 3.9+ library implementing goal-driven runtime verification for Cyber-Phys
 goalee/
 ├── goalee/                      # Core library (14 modules) — see goalee/AGENTS.md
 ├── examples/                    # 12 demo scenarios (each: app.py + goal_checker.py)
-├── tests/                       # pytest smoke tests (imports, enums, brokers, types)
+├── tests/                       # pytest suite: 447 tests, 99% coverage
 ├── docs/                        # Sphinx docs (mostly boilerplate)
 ├── pyproject.toml               # Package metadata, deps, ruff + pytest config
 ├── Makefile                     # lint/format/test/docs/dist/install targets
@@ -64,6 +64,13 @@ make clean                       # Remove build/pyc/test/ruff artifacts
 make docs                        # Sphinx HTML docs
 make dist                        # python -m build (sdist + wheel)
 ```
+
+## TESTING
+
+- **447 tests**, **99% coverage** across all 14 source modules.
+- Tests use `unittest.mock` to mock `commlib-py` — no broker connections needed.
+- Test files mirror source: `test_goal.py`, `test_entity.py`, `test_scenario.py`, etc.
+- Run: `make test` or `coverage run -m pytest tests/ -v && coverage report -m`.
 
 ## NOTES
 

@@ -1,20 +1,27 @@
+from __future__ import annotations
+
 from collections import deque
-from typing import Any, Dict, List
+from typing import Any
 
 from commlib.node import Node
+
+from goalee.brokers import AMQPBroker, MQTTBroker, RedisBroker
 from goalee.logging import default_logger as logger
 
 
 # A class representing an entity communicating via an MQTT broker on a specific topic
 class Entity:
-    def __init__(self, name: str,
-                 etype: str,
-                 topic: str,
-                 attributes: List[str],
-                 source=None,
-                 init_buffers: bool = False,
-                 buffer_length: int = 10,
-                 strict_mode: bool = False) -> None:
+    def __init__(
+        self,
+        name: str,
+        etype: str,
+        topic: str,
+        attributes: list[str],
+        source=None,
+        init_buffers: bool = False,
+        buffer_length: int = 10,
+        strict_mode: bool = False,
+    ) -> None:
         # Entity name
         self.name = name
         self.camel_name = self.to_camel_case(name)
@@ -47,8 +54,10 @@ class Entity:
 
     def get_buffer(self, attr_name: str, size: int = None):
         size = size if size is not None else self.attributes_buff[attr_name].maxlen
-        if len(self.attributes_buff[attr_name]) != \
-            self.attributes_buff[attr_name].maxlen:
+        if (
+            len(self.attributes_buff[attr_name])
+            != self.attributes_buff[attr_name].maxlen
+        ):
             buffer = [0] * size
         else:
             buffer = list(self.attributes_buff[attr_name])[-size:]
@@ -66,27 +75,30 @@ class Entity:
 
     def create_node(self):
         if self.source is None:
-            raise ValueError(f'Entity {self.name} not assigned a broker')
-        if self.source.__class__.__name__ == 'RedisBroker':
+            raise ValueError(f"Entity {self.name} not assigned a broker")
+        if isinstance(self.source, RedisBroker):
             from commlib.transports.redis import ConnectionParameters
+
             conn_params = ConnectionParameters(
                 host=self.source.host,
                 port=self.source.port,
                 db=self.source.db,
                 username=self.source.username,
-                password=self.source.password
+                password=self.source.password,
             )
-        elif self.source.__class__.__name__ == 'AMQPBroker':
+        elif isinstance(self.source, AMQPBroker):
             from commlib.transports.amqp import ConnectionParameters
+
             conn_params = ConnectionParameters(
                 host=self.source.host,
                 port=self.source.port,
                 vhost=self.source.vhost,
                 username=self.source.username,
-                password=self.source.password
+                password=self.source.password,
             )
-        elif self.source.__class__.__name__ == 'MQTTBroker':
+        elif isinstance(self.source, MQTTBroker):
             from commlib.transports.mqtt import ConnectionParameters
+
             conn_params = ConnectionParameters(
                 host=self.source.host,
                 port=self.source.port,
@@ -94,15 +106,17 @@ class Entity:
                 password=self.source.password,
             )
         else:
-            raise ValueError('Invalid broker type')
+            raise ValueError("Invalid broker type")
         self.conn_params = conn_params
 
-        self.node = Node(node_name=self.camel_name,
-                         connection_params=self.conn_params,
-                         debug=False, heartbeats=False)
+        self.node = Node(
+            node_name=self.camel_name,
+            connection_params=self.conn_params,
+            debug=False,
+            heartbeats=False,
+        )
         self.subscriber = self.node.create_subscriber(
-            topic=self.topic,
-            on_message=self.update_state
+            topic=self.topic, on_message=self.update_state
         )
 
     def start(self):
@@ -119,7 +133,7 @@ class Entity:
         self.node.run()
         logger.info(f"Started Entity <{self.name}> listening on topic <{self.topic}>")
 
-    def update_state(self, new_state: Dict[str, Any]) -> None:
+    def update_state(self, new_state: dict[str, Any]) -> None:
         """
         Function for updating Entity state. Meant to be used as a callback function by the Entity's subscriber object
         (commlib-py).
@@ -135,7 +149,9 @@ class Entity:
                 #     f"Entity <{self.name}> state - Message KeyError <{key}>\n"
                 # )
                 if self._strict:
-                    logger.warning(f"Entity <{self.name}> in strict mode - Dropping invalid message")
+                    logger.warning(
+                        f"Entity <{self.name}> in strict mode - Dropping invalid message"
+                    )
                     return
                 else:
                     continue
@@ -154,11 +170,16 @@ class Entity:
         state = new_state.copy()
         for key in state:
             if self._strict and key not in self.attributes:
-                logger.warning(f"Entity <{self.name}> in strict mode - Dropping invalid message")
+                logger.warning(
+                    f"Entity <{self.name}> in strict mode - Dropping invalid message"
+                )
                 return
         for attribute, value in state.items():
             # If value is a dictionary, also update the Dict's subattributes/items
-            if attribute in self.attributes and self.attributes_buff[attribute] is not None:
+            if (
+                attribute in self.attributes
+                and self.attributes_buff[attribute] is not None
+            ):
                 self.attributes_buff[attribute].append(value)
 
     def update_attributes(self, new_state):
@@ -175,4 +196,3 @@ class Entity:
             #     setattr(root[attribute].value, 'second', value['second'])
             if key in self.attributes:
                 self.attributes[key] = value
-

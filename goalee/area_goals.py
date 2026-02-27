@@ -1,46 +1,45 @@
-from typing import Any, List, Optional, Callable
-from enum import IntEnum
+from __future__ import annotations
 
-import time
-import uuid
 import math
-
-from commlib.node import Node
+from enum import IntEnum
+from typing import Any
 
 from goalee.entity import Entity
 from goalee.goal import Goal, GoalState
 from goalee.types import Point
-from goalee.logging import default_logger as logger
 
 
 class AreaGoalTag(IntEnum):
     ENTER = 0
-    EXIT =  1
+    EXIT = 1
     AVOID = 2
-    STEP =  3
+    STEP = 3
 
 
 class RectangleAreaGoal(Goal):
-
-    def __init__(self,
-                 entities: List[Entity],
-                 bottom_left_edge: Point,
-                 length_x: float,
-                 length_y: float,
-                 tag: AreaGoalTag = AreaGoalTag.ENTER,
-                 name: Optional[str] = None,
-                 event_emitter: Optional[Any] = None,
-                 max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None,
-                 for_duration: Optional[float] = None,
-                 tick_interval: Optional[float] = 0.1):
-        super().__init__(entities,
-                         event_emitter,
-                         name=name,
-                         max_duration=max_duration,
-                         min_duration=min_duration,
-                         for_duration=for_duration,
-                         tick_freq=int(1.0 / tick_interval))
+    def __init__(
+        self,
+        entities: list[Entity],
+        bottom_left_edge: Point,
+        length_x: float,
+        length_y: float,
+        tag: AreaGoalTag = AreaGoalTag.ENTER,
+        name: str | None = None,
+        event_emitter: Any | None = None,
+        max_duration: float | None = None,
+        min_duration: float | None = None,
+        for_duration: float | None = None,
+        tick_interval: float | None = 0.1,
+    ):
+        super().__init__(
+            entities,
+            event_emitter,
+            name=name,
+            max_duration=max_duration,
+            min_duration=min_duration,
+            for_duration=for_duration,
+            tick_freq=int(1.0 / tick_interval),
+        )
         self._bottom_left_edge = bottom_left_edge
         self._length_x = length_x
         self._length_y = length_y
@@ -53,33 +52,41 @@ class RectangleAreaGoal(Goal):
 
     def on_enter(self):
         self.log_debug(
-            f'Starting RectangleAreaGoal <{self._name}> with params:\n'
-            f'-> Monitoring Entities: {[e.name for e in self._entities]}\n'
-            f'-> Bottom Left Edge: {self._bottom_left_edge}\n'
-            f'-> Length X: {self._length_x}\n'
-            f'-> Length Y: {self._length_y}\n'
-            f'-> Strategy: {self._tag.name}'
+            f"Starting RectangleAreaGoal <{self._name}> with params:\n"
+            f"-> Monitoring Entities: {[e.name for e in self._entities]}\n"
+            f"-> Bottom Left Edge: {self._bottom_left_edge}\n"
+            f"-> Length X: {self._length_x}\n"
+            f"-> Length Y: {self._length_y}\n"
+            f"-> Strategy: {self._tag.name}"
         )
 
     def check_area(self):
         for _last_state in self._last_states:
-            if _last_state.get('position', None) is None:
+            if _last_state.get("position", None) is None:
                 continue
-            pos = _last_state['position']
-            if pos['x'] == None or pos['y'] == None:
+            pos = _last_state["position"]
+            if pos["x"] is None or pos["y"] is None:
                 continue
-            x_axis = (pos['x'] < (self._bottom_left_edge.x + self._length_x)
-                    and pos['x'] > self._bottom_left_edge.x)
-            y_axis = (pos['y'] < (self._bottom_left_edge.y + self._length_y)
-                    and pos['y'] > self._bottom_left_edge.y)
+            x_axis = (
+                pos["x"] < (self._bottom_left_edge.x + self._length_x)
+                and pos["x"] > self._bottom_left_edge.x
+            )
+            y_axis = (
+                pos["y"] < (self._bottom_left_edge.y + self._length_y)
+                and pos["y"] > self._bottom_left_edge.y
+            )
             reached = x_axis and y_axis
             if reached and self.tag == AreaGoalTag.ENTER:
                 if self._for_duration is not None and self._for_duration > 0:
                     if self._ts_hold is None or self._ts_hold < 0:
                         self._ts_hold = self.get_current_ts()
-                        self.log_info(f'Entering FOR_TIME phase: {self._for_duration} seconds')
+                        self.log_info(
+                            f"Entering FOR_TIME phase: {self._for_duration} seconds"
+                        )
                     elif self.get_current_ts() - self._ts_hold > self._for_duration:
-                        self.log_info(f'Closing FOR_TIME phase: {self._for_duration} seconds')
+                        self.log_info(
+                            f"Closing FOR_TIME phase: {self._for_duration} seconds"
+                        )
                         self.set_state(GoalState.COMPLETED)
                 else:
                     self.set_state(GoalState.COMPLETED)
@@ -100,25 +107,28 @@ class RectangleAreaGoal(Goal):
 
 
 class CircularAreaGoal(Goal):
-
-    def __init__(self,
-                 entities: List[Entity],
-                 center: Point,
-                 radius: float,
-                 tag: AreaGoalTag = AreaGoalTag.ENTER,
-                 name: Optional[str] = None,
-                 event_emitter: Optional[Any] = None,
-                 max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None,
-                 for_duration: Optional[float] = None,
-                 tick_interval: Optional[float] = 0.1):
-        super().__init__(entities,
-                         event_emitter,
-                         name=name,
-                         max_duration=max_duration,
-                         min_duration=min_duration,
-                         for_duration=for_duration,
-                         tick_freq=int(1.0 / tick_interval))
+    def __init__(
+        self,
+        entities: list[Entity],
+        center: Point,
+        radius: float,
+        tag: AreaGoalTag = AreaGoalTag.ENTER,
+        name: str | None = None,
+        event_emitter: Any | None = None,
+        max_duration: float | None = None,
+        min_duration: float | None = None,
+        for_duration: float | None = None,
+        tick_interval: float | None = 0.1,
+    ):
+        super().__init__(
+            entities,
+            event_emitter,
+            name=name,
+            max_duration=max_duration,
+            min_duration=min_duration,
+            for_duration=for_duration,
+            tick_freq=int(1.0 / tick_interval),
+        )
         self._center = center
         self._radius = radius
         self._tag = tag
@@ -130,19 +140,19 @@ class CircularAreaGoal(Goal):
 
     def on_enter(self):
         self.log_debug(
-            f'Starting CircularAreaGoal <{self._name}> with params:\n'
-            f'-> Monitoring Entities: {[e.name for e in self._entities]}\n'
-            f'-> Center: {self._center}\n'
-            f'-> Radius: {self._radius}\n'
-            f'-> Strategy: {self._tag.name}'
+            f"Starting CircularAreaGoal <{self._name}> with params:\n"
+            f"-> Monitoring Entities: {[e.name for e in self._entities]}\n"
+            f"-> Center: {self._center}\n"
+            f"-> Radius: {self._radius}\n"
+            f"-> Strategy: {self._tag.name}"
         )
 
     def check_area(self):
         for _last_state in self._last_states:
-            if _last_state.get('position', None) is None:
+            if _last_state.get("position", None) is None:
                 continue
-            pos = _last_state['position']
-            if pos['x'] == None or pos['y'] == None:
+            pos = _last_state["position"]
+            if pos["x"] is None or pos["y"] is None:
                 continue
             dist = self._calc_distance(pos)
             reached = dist <= self._radius
@@ -167,8 +177,7 @@ class CircularAreaGoal(Goal):
 
     def _calc_distance(self, pos):
         d = math.sqrt(
-            (pos['x'] - self._center.x)**2 + \
-            (pos['y'] - self._center.y)**2
+            (pos["x"] - self._center.x) ** 2 + (pos["y"] - self._center.y) ** 2
         )
         return d
 
@@ -178,18 +187,19 @@ class CircularAreaGoal(Goal):
 
 
 class MovingAreaGoal(Goal):
-
-    def __init__(self,
-                 motion_entity: Entity,
-                 entities: List[Entity],
-                 radius: float,
-                 tag: AreaGoalTag = AreaGoalTag.ENTER,
-                 name: Optional[str] = None,
-                 event_emitter: Optional[Any] = None,
-                 max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None,
-                 for_duration: Optional[float] = None,
-                 tick_interval: Optional[float] = 0.1):
+    def __init__(
+        self,
+        motion_entity: Entity,
+        entities: list[Entity],
+        radius: float,
+        tag: AreaGoalTag = AreaGoalTag.ENTER,
+        name: str | None = None,
+        event_emitter: Any | None = None,
+        max_duration: float | None = None,
+        min_duration: float | None = None,
+        for_duration: float | None = None,
+        tick_interval: float | None = 0.1,
+    ):
         """
         Initializes an AreaGoal instance.
 
@@ -205,13 +215,15 @@ class MovingAreaGoal(Goal):
         """
         self._mentity = motion_entity
         entities.remove(motion_entity) if motion_entity in entities else None
-        super().__init__(entities,
-                         event_emitter,
-                         name=name,
-                         max_duration=max_duration,
-                         min_duration=min_duration,
-                         for_duration=for_duration,
-                         tick_freq=int(1.0 / tick_interval))
+        super().__init__(
+            entities,
+            event_emitter,
+            name=name,
+            max_duration=max_duration,
+            min_duration=min_duration,
+            for_duration=for_duration,
+            tick_freq=int(1.0 / tick_interval),
+        )
         self._radius = radius
         self._tag = tag
         self._last_states = [entity.state for entity in self._entities]
@@ -225,17 +237,13 @@ class MovingAreaGoal(Goal):
         return self._tag
 
     def on_enter(self):
-        self.log_debug("Starting CircularAreaGoal <{}> with params:\n"
-                    "-> Motion Entity: {}\n"
-                    "-> Monitoring Entities: {}\n"
-                    "-> Radius: {}\n"
-                    "-> Strategy: {}".format(
-                        self._name,
-                        self._mentity,
-                        [e.name for e in self._entities],
-                        self._radius,
-                        self._tag.name
-                    ))
+        self.log_debug(
+            f"Starting CircularAreaGoal <{self._name}> with params:\n"
+            f"-> Motion Entity: {self._mentity}\n"
+            f"-> Monitoring Entities: {[e.name for e in self._entities]}\n"
+            f"-> Radius: {self._radius}\n"
+            f"-> Strategy: {self._tag.name}"
+        )
 
     def check_area(self):
         if self._mentity.state in (None, {}):
@@ -243,12 +251,14 @@ class MovingAreaGoal(Goal):
         for _last_state in self._last_states:
             if _last_state in (None, {}):
                 continue
-            elif _last_state.get('position', None) is None:
-                self.log_warning(f'Entity {_last_state} has no position attribute')
+            elif _last_state.get("position", None) is None:
+                self.log_warning(f"Entity {_last_state} has no position attribute")
                 continue
-            pos = _last_state['position']
-            if pos['x'] == None or pos['y'] == None:
-                self.log_warning(f'Entity {_last_state}.position has no "x" or "y" attribute')
+            pos = _last_state["position"]
+            if pos["x"] is None or pos["y"] is None:
+                self.log_warning(
+                    f'Entity {_last_state}.position has no "x" or "y" attribute'
+                )
                 continue
             dist = self._calc_distance(pos)
             reached = dist <= self._radius
@@ -273,8 +283,8 @@ class MovingAreaGoal(Goal):
 
     def _calc_distance(self, pos):
         d = math.sqrt(
-            (pos['x'] - self._mentity.state["position"]["x"])**2 + \
-            (pos['y'] - self._mentity.state["position"]["y"])**2
+            (pos["x"] - self._mentity.state["position"]["x"]) ** 2
+            + (pos["y"] - self._mentity.state["position"]["y"]) ** 2
         )
         return d
 

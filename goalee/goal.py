@@ -1,12 +1,13 @@
-from typing import Any, List, Optional
-from enum import IntEnum
+from __future__ import annotations
 
 import time
 import uuid
+from enum import IntEnum
+from typing import Any
 
 from goalee.entity import Entity
 from goalee.logging import default_logger as logger
-from goalee.rtmonitor import RTMonitor, EventMsg
+from goalee.rtmonitor import EventMsg, RTMonitor
 
 
 class GoalState(IntEnum):
@@ -18,15 +19,16 @@ class GoalState(IntEnum):
 
 
 class Goal:
-
-    def __init__(self,
-                 entities: Optional[List[Entity]] = None,
-                 event_emitter: Optional[Any] = None,
-                 name: Optional[str] = None,
-                 tick_freq: Optional[int] = 10,  # hz
-                 max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None,
-                 for_duration: Optional[float] = None):
+    def __init__(
+        self,
+        entities: list[Entity] | None = None,
+        event_emitter: Any | None = None,
+        name: str | None = None,
+        tick_freq: int | None = 10,  # hz
+        max_duration: float | None = None,
+        min_duration: float | None = None,
+        for_duration: float | None = None,
+    ):
         self._rtmonitor: RTMonitor = None
         self._state: GoalState = None
         self._ee = event_emitter
@@ -38,7 +40,7 @@ class Goal:
             name = self._gen_random_name()
         self._name: str = name
         self._freq: int = tick_freq
-        self._entities: List = entities if entities is not None else []
+        self._entities: list = entities if entities is not None else []
         self._ts_start: float = -1.0
         self._ts_hold: float = -1.0
         self._ts_exit: float = -1.0
@@ -49,16 +51,16 @@ class Goal:
 
     def serialize(self):
         return {
-            'name': self._name,
-            'type': self.__class__.__name__,
-            'state': self._state.name,
-            'max_duration': self._max_duration,
-            'min_duration': self._min_duration,
-            'for_duration': self._for_duration,
-            'elapsed': self.duration,
-            'ts_start': self._ts_start,
-            'ts_exit': self._ts_exit,
-            'entities': [entity.name for entity in self._entities]
+            "name": self._name,
+            "type": self.__class__.__name__,
+            "state": self._state.name,
+            "max_duration": self._max_duration,
+            "min_duration": self._min_duration,
+            "for_duration": self._for_duration,
+            "elapsed": self.duration,
+            "ts_start": self._ts_start,
+            "ts_exit": self._ts_exit,
+            "entities": [entity.name for entity in self._entities],
         }
 
     @property
@@ -75,7 +77,7 @@ class Goal:
 
     @property
     def status(self) -> bool:
-        return True if self.state == GoalState.COMPLETED else False
+        return self.state == GoalState.COMPLETED
 
     @property
     def state(self) -> GoalState:
@@ -96,7 +98,7 @@ class Goal:
 
         """
         if state not in GoalState:
-            raise ValueError('Not a valid state was given')
+            raise ValueError("Not a valid state was given")
         if state == self.state:
             return
         self._state = state
@@ -109,22 +111,26 @@ class Goal:
 
     def _send_state_change_event(self):
         event = EventMsg(
-                type='goal_state',
-                data={
-                    'goal_name': self.name,
-                    'state': self.state.name,
-                    'state_int': self.state.value,
-                    'duration': self.duration if self.duration > 0 else self.get_current_elapsed(),
-                    'ts_start': self._ts_start,
-                    'elapsed_time': self.get_current_elapsed(),
-                }
+            type="goal_state",
+            data={
+                "goal_name": self.name,
+                "state": self.state.name,
+                "state_int": self.state.value,
+                "duration": self.duration
+                if self.duration > 0
+                else self.get_current_elapsed(),
+                "ts_start": self._ts_start,
+                "elapsed_time": self.get_current_elapsed(),
+            },
         )
         # self.log_info(f'Sending goal state change event: {event}')
         self._rtmonitor.send_event(event)
 
     def _report_state(self):
-        self.log_debug(f'Goal <{self.__class__.__name__}:{self.name}> entered {self.state.name} state ' +
-              f'(maxT={self._max_duration}, minT={self._min_duration}. forT={self._for_duration})')
+        self.log_debug(
+            f"Goal <{self.__class__.__name__}:{self.name}> entered {self.state.name} state "
+            + f"(maxT={self._max_duration}, minT={self._min_duration}. forT={self._for_duration})"
+        )
 
     def enter(self, rtmonitor: RTMonitor = None):
         """
@@ -178,7 +184,11 @@ class Goal:
             - If `_max_duration` is None or 0, the goal can run indefinitely until it reaches a terminal state.
             - If `_min_duration` is None or 0, there is no minimum duration constraint for the goal.
         """
-        while self._state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
+        while self._state not in (
+            GoalState.COMPLETED,
+            GoalState.FAILED,
+            GoalState.TERMINATED,
+        ):
             self.tick()
             elapsed = self.get_current_elapsed()
             if self._max_duration in (None, 0):
@@ -187,8 +197,9 @@ class Goal:
                 self._duration = elapsed
                 self.set_state(GoalState.FAILED)
                 self.log_warning(
-                    f'Goal <{self.__class__.__name__}:{self._name}> exited due' + \
-                    f' to timeout after {self._max_duration} seconds!')
+                    f"Goal <{self.__class__.__name__}:{self._name}> exited due"
+                    + f" to timeout after {self._max_duration} seconds!"
+                )
                 break
             time.sleep(1 / self._freq)
         elapsed = self.get_current_elapsed()
@@ -208,7 +219,7 @@ class Goal:
         Returns:
             str: String representation of the random unique id
         """
-        return str(uuid.uuid4()).replace('-', '')
+        return str(uuid.uuid4()).replace("-", "")
 
     def log_namespace(self):
         return f"{self.__class__.__name__}:{self.name}"

@@ -1,4 +1,6 @@
-from typing import Any, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from goalee.entity import Entity
 from goalee.goal import Goal, GoalState
@@ -6,17 +8,23 @@ from goalee.types import Point
 
 
 class WaypointTrajectoryGoal(Goal):
-    def __init__(self,
-                 entity: Entity,
-                 waypoints: List[Point],
-                 deviation: float = 0.0,
-                 name: Optional[str] = None,
-                 event_emitter: Optional[Any] = None,
-                 max_duration: Optional[float] = None,
-                 min_duration: Optional[float] = None):
-        super().__init__([entity], event_emitter, name=name,
-                         max_duration=max_duration,
-                         min_duration=min_duration)
+    def __init__(
+        self,
+        entity: Entity,
+        waypoints: list[Point],
+        deviation: float = 0.0,
+        name: str | None = None,
+        event_emitter: Any | None = None,
+        max_duration: float | None = None,
+        min_duration: float | None = None,
+    ):
+        super().__init__(
+            [entity],
+            event_emitter,
+            name=name,
+            max_duration=max_duration,
+            min_duration=min_duration,
+        )
         self._entity = entity
         self._waypoints = waypoints
         self._deviation = deviation
@@ -24,12 +32,12 @@ class WaypointTrajectoryGoal(Goal):
 
     def on_enter(self):
         self.log_debug(
-            f'Starting PositionGoal <{self._name}> with params:\n'
-            f'-> Entity: {self._entity.name}\n'
-            f'-> Waypoints: {self._waypoints}\n'
-            f'-> Deviation: {self._deviation}\n'
-            f'-> Max Duration: {self._max_duration}\n'
-            f'-> Min Duration: {self._min_duration}'
+            f"Starting PositionGoal <{self._name}> with params:\n"
+            f"-> Entity: {self._entity.name}\n"
+            f"-> Waypoints: {self._waypoints}\n"
+            f"-> Deviation: {self._deviation}\n"
+            f"-> Max Duration: {self._max_duration}\n"
+            f"-> Min Duration: {self._min_duration}"
         )
 
     def current_target_waypoint(self):
@@ -38,22 +46,27 @@ class WaypointTrajectoryGoal(Goal):
                 return self._waypoints[i], i
 
     def check_reached_waypoint(self):
-        if self._last_state.get('position', None) is None:
+        if self._last_state.get("position", None) is None:
             return
-        pos = self._last_state['position']
-        if pos.get('x', 'None') is None and pos.get('y', 'None') is None \
-            and pos.get('z', 'None') is None:
-                self.log_warning('Received invalid position values for x,y,z')
-                return
+        pos = self._last_state["position"]
+        if (
+            pos.get("x", "None") is None
+            and pos.get("y", "None") is None
+            and pos.get("z", "None") is None
+        ):
+            self.log_warning("Received invalid position values for x,y,z")
+            return
         current_target, idx = self.current_target_waypoint()
-        reached = (pos['x'] > (current_target.x - self._deviation) and \
-                   pos['x'] < (current_target.x + self._deviation) and \
-                   pos['y'] > (current_target.y - self._deviation) and \
-                   pos['y'] < (current_target.y + self._deviation) and \
-                   pos['z'] > (current_target.z - self._deviation) and \
-                   pos['z'] < (current_target.z + self._deviation))
+        reached = (
+            pos["x"] > (current_target.x - self._deviation)
+            and pos["x"] < (current_target.x + self._deviation)
+            and pos["y"] > (current_target.y - self._deviation)
+            and pos["y"] < (current_target.y + self._deviation)
+            and pos["z"] > (current_target.z - self._deviation)
+            and pos["z"] < (current_target.z + self._deviation)
+        )
         if reached:
-            self.log_info(f'Reached waypoint {idx}')
+            self.log_info(f"Reached waypoint {idx}")
             self._waypoints_reached_map[idx] = True
 
     def tick(self):

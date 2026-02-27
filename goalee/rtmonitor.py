@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
+
 from commlib.msg import PubSubMessage
+
 from goalee.logging import default_logger as logger
 
 
 class EventMsg(PubSubMessage):
     type: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
 
 
 class LogMsg(PubSubMessage):
@@ -15,7 +19,6 @@ class LogMsg(PubSubMessage):
 
 
 class RemoteLogHandler(logging.Handler):
-
     def __init__(self, rtmonitor) -> None:
         self.rtm = rtmonitor
         super().__init__()
@@ -24,26 +27,22 @@ class RemoteLogHandler(logging.Handler):
         try:
             self.rtm.log(record.msg, record.levelname)
         except Exception as e:
-            logger.error(f'[RTMonitor] Error sending log message: {str(e)}')
+            logger.error(f"[RTMonitor] Error sending log message: {str(e)}")
 
 
 class RTMonitor:
     def __init__(self, comm_node, etopic, ltopic):
         self.node = comm_node
-        epub = self.node.create_publisher(
-            topic=etopic,
-            msg_type=EventMsg
-        )
+        epub = self.node.create_publisher(topic=etopic, msg_type=EventMsg)
         epub.run()
-        lpub = self.node.create_publisher(
-            topic=ltopic,
-            msg_type=LogMsg
-        )
+        lpub = self.node.create_publisher(topic=ltopic, msg_type=LogMsg)
         lpub.run()
         self.epub = epub
         self.lpub = lpub
         logger.addHandler(RemoteLogHandler(self))
-        logger.info(f'[RTMonitor]: Initialized topics: events -> {etopic}, logs -> {ltopic}')
+        logger.info(
+            f"[RTMonitor]: Initialized topics: events -> {etopic}, logs -> {ltopic}"
+        )
 
     def send_event(self, event):
         # logger.debug(f'[RTMonitor] Sending Event: {event}')

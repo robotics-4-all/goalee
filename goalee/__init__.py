@@ -12,3 +12,7 @@ from goalee.brokers import MQTTBroker as MQTTBroker
 from goalee.brokers import RedisBroker as RedisBroker
 from goalee.entity import Entity as Entity
 from goalee.scenario import Scenario as Scenario
+from goalee.timing_goals import DeadlineGoal as DeadlineGoal
+from goalee.timing_goals import LatencyGoal as LatencyGoal
+from goalee.timing_goals import OrderingGoal as OrderingGoal
+from goalee.timing_goals import RateGoal as RateGoal

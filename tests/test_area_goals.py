@@ -37,6 +37,8 @@ class TestAreaGoalTag:
         assert AreaGoalTag.EXIT == 1
         assert AreaGoalTag.AVOID == 2
         assert AreaGoalTag.STEP == 3
+        assert AreaGoalTag.STAY == 4
+        assert AreaGoalTag.CROSS == 5
 
 
 # ---------------------------------------------------------------------------

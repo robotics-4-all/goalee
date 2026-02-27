@@ -14,6 +14,8 @@ class AreaGoalTag(IntEnum):
     EXIT = 1
     AVOID = 2
     STEP = 3
+    STAY = 4
+    CROSS = 5
 
 
 class RectangleAreaGoal(Goal):

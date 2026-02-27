@@ -260,6 +260,36 @@ class TestOrientationComparisons:
         assert result is None
 
 
+class TestOrientationXYZAliases:
+    def test_xyz_alias_single(self):
+        o = Orientation(z=1.5)
+        assert o.yaw == 1.5
+        assert o.roll == 0.0
+        assert o.pitch == 0.0
+
+    def test_xyz_alias_all(self):
+        o = Orientation(x=0.1, y=0.2, z=0.3)
+        assert o.roll == 0.1
+        assert o.pitch == 0.2
+        assert o.yaw == 0.3
+
+    def test_roll_pitch_yaw_still_work(self):
+        o = Orientation(roll=0.1, pitch=0.2, yaw=0.3)
+        assert o.roll == 0.1
+        assert o.pitch == 0.2
+        assert o.yaw == 0.3
+
+    def test_explicit_roll_pitch_yaw_takes_precedence(self):
+        o = Orientation(roll=0.5, x=0.9)
+        assert o.roll == 0.5
+
+    def test_positional_args_still_work(self):
+        o = Orientation(0.1, 0.2, 0.3)
+        assert o.roll == 0.1
+        assert o.pitch == 0.2
+        assert o.yaw == 0.3
+
+
 class TestOrientationDefaults:
     def test_defaults(self):
         o = Orientation()

@@ -53,15 +53,10 @@ class Entity:
         return self.attributes[key]
 
     def get_buffer(self, attr_name: str, size: int = None):
-        size = size if size is not None else self.attributes_buff[attr_name].maxlen
-        if (
-            len(self.attributes_buff[attr_name])
-            != self.attributes_buff[attr_name].maxlen
-        ):
-            buffer = [0] * size
-        else:
-            buffer = list(self.attributes_buff[attr_name])[-size:]
-        return buffer
+        buf = self.attributes_buff[attr_name]
+        if size is not None:
+            return list(buf)[-size:]
+        return list(buf)
 
     def get_attr(self, attr_name: str) -> Any:
         return self.attributes[attr_name]

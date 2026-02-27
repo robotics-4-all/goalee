@@ -208,7 +208,7 @@ class TestEntityGetBuffer:
         result = e.get_buffer("a", size=3)
         assert result == [2, 3, 4]
 
-    def test_get_buffer_not_full_returns_zeros(self):
+    def test_get_buffer_not_full_returns_actual_values(self):
         e = Entity(
             name="e",
             etype="t",
@@ -219,7 +219,33 @@ class TestEntityGetBuffer:
         )
         e.attributes_buff["a"].append(1)
         result = e.get_buffer("a")
-        assert result == [0] * 5
+        assert result == [1]
+
+    def test_get_buffer_empty_returns_empty_list(self):
+        e = Entity(
+            name="e",
+            etype="t",
+            topic="t",
+            attributes=["a"],
+            init_buffers=True,
+            buffer_length=5,
+        )
+        result = e.get_buffer("a")
+        assert result == []
+
+    def test_get_buffer_partial_fill_with_size(self):
+        e = Entity(
+            name="e",
+            etype="t",
+            topic="t",
+            attributes=["a"],
+            init_buffers=True,
+            buffer_length=10,
+        )
+        for v in [1, 2, 3]:
+            e.attributes_buff["a"].append(v)
+        result = e.get_buffer("a", size=2)
+        assert result == [2, 3]
 
 
 class TestEntityInitAttrBuffer:

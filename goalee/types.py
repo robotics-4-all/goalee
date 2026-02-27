@@ -78,6 +78,23 @@ class Orientation:
     pitch: float | None = 0.0
     yaw: float | None = 0.0
 
+    def __init__(
+        self,
+        roll: float | None = 0.0,
+        pitch: float | None = 0.0,
+        yaw: float | None = 0.0,
+        *,
+        x: float | None = None,
+        y: float | None = None,
+        z: float | None = None,
+    ) -> None:
+        # Accept x/y/z as aliases for roll/pitch/yaw (robotics convention).
+        # If both are provided, the explicit roll/pitch/yaw take precedence
+        # only when they differ from the default (0.0).
+        self.roll = x if x is not None and roll == 0.0 else roll
+        self.pitch = y if y is not None and pitch == 0.0 else pitch
+        self.yaw = z if z is not None and yaw == 0.0 else yaw
+
     def __sub__(self, other):
         if isinstance(other, Orientation):
             return Orientation(

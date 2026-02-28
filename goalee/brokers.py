@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from pydantic import BaseModel
 
 
 class Broker(BaseModel):
     pass
+
 
 class MQTTBroker(Broker):
     host: str = "localhost"

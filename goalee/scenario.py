@@ -1,43 +1,50 @@
-import os
+from __future__ import annotations
+
+import contextlib
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, List, Optional
 
 from commlib.node import Node
+
+from goalee.area_goals import MovingAreaGoal
+from goalee.brokers import AMQPBroker, Broker, MQTTBroker, RedisBroker
+from goalee.complex_goal import ComplexGoal
+from goalee.definitions import GOAL_TICK_FREQ_HZ
 from goalee.entity import Entity
 from goalee.goal import Goal, GoalState
-from goalee.brokers import Broker
 from goalee.logging import default_logger as logger
-from goalee.rtmonitor import RTMonitor, EventMsg
-from goalee.definitions import GOAL_TICK_FREQ_HZ
+from goalee.repeater import GoalRepeater
+from goalee.rtmonitor import EventMsg, RTMonitor
 
 
 class Scenario:
-    def __init__(self,
-                 name: str = "",
-                 broker: Optional[Broker] = None,
-                 goal_weights: Optional[List] = None,
-                 antigoal_weights: Optional[List] = None,
-                 goals: Optional[List[Goal]] = [],
-                 anti_goals: Optional[List[Goal]] = [],
-                 fatal_goals: Optional[List[Goal]] = [],
-                 goal_tick_freq_hz: int = None):
+    def __init__(
+        self,
+        name: str = "",
+        broker: Broker | None = None,
+        goal_weights: list | None = None,
+        antigoal_weights: list | None = None,
+        goals: list[Goal] | None = None,
+        anti_goals: list[Goal] | None = None,
+        fatal_goals: list[Goal] | None = None,
+        goal_tick_freq_hz: int = None,
+    ):
         self._broker: Broker = broker
         self._rtmonitor: RTMonitor = None
         if name in (None, "") or len(name) == 0:
             name = self.gen_random_name()
         self._name: str = name
-        self._goal_weights: List[float] = goal_weights
-        self._antigoal_weights: List[float] = antigoal_weights
+        self._goal_weights: list[float] = goal_weights
+        self._antigoal_weights: list[float] = antigoal_weights
         if self._broker is not None:
             self._node = self._create_comm_node(self._broker)
         else:
             self._node: Node = None
-        self._goals: List[Goal] = goals
-        self._anti_goals: List[Goal] = anti_goals
-        self._fatal_goals: List[Goal] = fatal_goals
-        self._entities: List[Entity] = []
+        self._goals: list[Goal] = goals if goals is not None else []
+        self._anti_goals: list[Goal] = anti_goals if anti_goals is not None else []
+        self._fatal_goals: list[Goal] = fatal_goals if fatal_goals is not None else []
+        self._entities: list[Entity] = []
         self._start_ts = self.get_current_ts()
         self._goal_tick_freq_hz = goal_tick_freq_hz or GOAL_TICK_FREQ_HZ
 
@@ -65,18 +72,20 @@ class Scenario:
                     self._entities.append(entity)
 
     def print_stats(self):
-        self.log_info(f"Scenario '{self._name}' Configuration:\n"
-                  f"{'=' * 80}\n"
-                  f"    Name: {self._name}\n"
-                  f"    Broker: {self._broker}\n"
-                  f"    Entities: {[entity.name for entity in self._entities]}\n"
-                  f"    Goals: {[goal.name for goal in self._goals]}\n"
-                  f"    Anti-Goals: {[goal.name for goal in self._anti_goals]}\n"
-                  f"    Fatal-Goals: {[goal.name for goal in self._fatal_goals]}\n"
-                  f"    Goal Weights: {self._goal_weights}\n"
-                  f"    Anti-Goal Weights: {self._antigoal_weights}\n"
-                  f"    Goal Tick Frequency (hz): {self._goal_tick_freq_hz}\n"
-                  f"{'=' * 80}")
+        self.log_info(
+            f"Scenario '{self._name}' Configuration:\n"
+            f"{'=' * 80}\n"
+            f"    Name: {self._name}\n"
+            f"    Broker: {self._broker}\n"
+            f"    Entities: {[entity.name for entity in self._entities]}\n"
+            f"    Goals: {[goal.name for goal in self._goals]}\n"
+            f"    Anti-Goals: {[goal.name for goal in self._anti_goals]}\n"
+            f"    Fatal-Goals: {[goal.name for goal in self._fatal_goals]}\n"
+            f"    Goal Weights: {self._goal_weights}\n"
+            f"    Anti-Goal Weights: {self._antigoal_weights}\n"
+            f"    Goal Tick Frequency (hz): {self._goal_tick_freq_hz}\n"
+            f"{'=' * 80}"
+        )
 
     def init_rtmonitor(self, etopic, ltopic):
         if self._node is not None:
@@ -84,7 +93,7 @@ class Scenario:
             for goal in self._goals:
                 goal.set_rtmonitor(self._rtmonitor)
         else:
-            self.log_warning('Cannot initialize RTMonitor without a communication node')
+            self.log_warning("Cannot initialize RTMonitor without a communication node")
 
     def gen_random_name(self) -> str:
         """gen_random_id.
@@ -95,11 +104,12 @@ class Scenario:
         Returns:
             str: String representation of the random unique id
         """
-        return str(uuid.uuid4()).replace('-', '')
+        return str(uuid.uuid4()).replace("-", "")
 
     def _create_comm_node(self, broker, heartbeats=False):
-        if broker.__class__.__name__ == 'RedisBroker':
+        if isinstance(broker, RedisBroker):
             from commlib.transports.redis import ConnectionParameters
+
             conn_params = ConnectionParameters(
                 host=broker.host,
                 port=broker.port,
@@ -108,8 +118,9 @@ class Scenario:
                 password=broker.password,
                 reconnect_attempts=0,
             )
-        elif broker.__class__.__name__ == 'AMQPBroker':
+        elif isinstance(broker, AMQPBroker):
             from commlib.transports.amqp import ConnectionParameters
+
             conn_params = ConnectionParameters(
                 host=broker.host,
                 port=broker.port,
@@ -118,8 +129,9 @@ class Scenario:
                 password=broker.password,
                 reconnect_attempts=0,
             )
-        elif broker.__class__.__name__ == 'MQTTBroker':
+        elif isinstance(broker, MQTTBroker):
             from commlib.transports.mqtt import ConnectionParameters
+
             conn_params = ConnectionParameters(
                 host=broker.host,
                 port=broker.port,
@@ -154,16 +166,24 @@ class Scenario:
             if len(self._goals) > 0:
                 self._goal_weights = [1.0 / len(self._goals)] * len(self._goals)
         elif len(self._goal_weights) != len(self._goals):
-            self.log_warning("Goal weights length does not match the number of goals. Initializing to equal weights.")
+            self.log_warning(
+                "Goal weights length does not match the number of goals. Initializing to equal weights."
+            )
             self._goal_weights = [1.0 / len(self._goals)] * len(self._goals)
         if self._antigoal_weights is None:
             if len(self._anti_goals) > 0:
-                self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(self._anti_goals)
+                self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(
+                    self._anti_goals
+                )
         elif len(self._antigoal_weights) != len(self._anti_goals):
-            self.log_warning("Anti-goal weights length does not match the number of anti-goals. Initializing to equal weights.")
-            self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(self._anti_goals)
+            self.log_warning(
+                "Anti-goal weights length does not match the number of anti-goals. Initializing to equal weights."
+            )
+            self._antigoal_weights = [1.0 / len(self._anti_goals)] * len(
+                self._anti_goals
+            )
 
-    def start_entities(self, goals: List[Goal] = None) -> None:
+    def start_entities(self, goals: list[Goal] = None) -> None:
         """
         Starts all entities associated with the goals in the scenario.
 
@@ -171,14 +191,14 @@ class Scenario:
         `start` method on each entity associated with that goal.
         """
         for goal in goals:
-            if goal.__class__.__name__ == 'ComplexGoal':
+            if isinstance(goal, ComplexGoal):
                 self.start_entities(goal.goals)
-            elif goal.__class__.__name__ == 'MovingAreaGoal':
+            elif isinstance(goal, MovingAreaGoal):
                 if goal.motion_entity is not None:
                     goal.motion_entity.start()
                 for entity in goal.entities:
                     entity.start()
-            elif goal.__class__.__name__ == 'GoalRepeater':
+            elif isinstance(goal, GoalRepeater):
                 self.start_entities([goal._goal])
             else:
                 for entity in goal.entities:
@@ -274,7 +294,9 @@ class Scenario:
     def start_goals(self):
         futures = []
         for goal in self._goals:
-            future = self._thread_executor.submit(goal.enter, )
+            future = self._thread_executor.submit(
+                goal.enter,
+            )
             futures.append(future)
         for future in futures:
             future.add_done_callback(self.on_goal)
@@ -293,7 +315,9 @@ class Scenario:
     def start_fatal_goals(self):
         futures = []
         for goal in self._fatal_goals:
-            future = self._thread_executor.submit(goal.enter, )
+            future = self._thread_executor.submit(
+                goal.enter,
+            )
             futures.append(future)
         for future in futures:
             future.add_done_callback(self.on_fatal)
@@ -301,14 +325,20 @@ class Scenario:
     def start_antigoals(self):
         futures = []
         for goal in self._anti_goals:
-            future = self._thread_executor.submit(goal.enter, )
+            future = self._thread_executor.submit(
+                goal.enter,
+            )
             futures.append(future)
         for future in futures:
             future.add_done_callback(self.on_antigoal)
 
     def terminate_fatal_goals(self):
         for goal in self._fatal_goals:
-            if goal.state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
+            if goal.state not in (
+                GoalState.COMPLETED,
+                GoalState.FAILED,
+                GoalState.TERMINATED,
+            ):
                 goal.terminate()
 
     def terminate_all_goals(self):
@@ -318,47 +348,77 @@ class Scenario:
 
     def terminate_goals(self):
         for goal in self._goals:
-            if goal.state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
+            if goal.state not in (
+                GoalState.COMPLETED,
+                GoalState.FAILED,
+                GoalState.TERMINATED,
+            ):
                 goal.terminate()
 
     def terminate_antigoals(self):
         for goal in self._anti_goals:
-            if goal.state not in (GoalState.COMPLETED, GoalState.FAILED, GoalState.TERMINATED):
+            if goal.state not in (
+                GoalState.COMPLETED,
+                GoalState.FAILED,
+                GoalState.TERMINATED,
+            ):
                 goal.terminate()
 
     def on_fatal(self, f):
         result = f.result()
         if result.state == GoalState.COMPLETED:
-            self.log_warning(f"Fatal Goal <{f.result().name}> exited with state: {f.result().state.name}")
+            self.log_warning(
+                f"Fatal Goal <{f.result().name}> exited with state: {f.result().state.name}"
+            )
             self.terminate_all_goals()
 
     def on_goal(self, f):
-        self.log_info(f"Goal <{f.result().name}> exited with state: {f.result().state.name}")
+        self.log_info(
+            f"Goal <{f.result().name}> exited with state: {f.result().state.name}"
+        )
 
     def on_antigoal(self, f):
-        self.log_info(f"AntiGoal <{f.result().name}> exited with state: {f.result().state.name}")
+        self.log_info(
+            f"AntiGoal <{f.result().name}> exited with state: {f.result().state.name}"
+        )
 
     def stop_thread_executor(self, wait: bool = False, force: bool = True):
-        try:
+        with contextlib.suppress(Exception):
             self._thread_executor.shutdown(wait=wait, cancel_futures=force)
-        except Exception:
-            pass
 
     def print_results(self):
         self.log_info(
             f"Scenario '{self._name}' Completed (Concurrent Mode)\n"
             f"{'=' * 80}\n"
-            "Results:\n" +
-            "   Goals:\n" +
-            "\n".join([f"       - {goal_name}: {'✓' if goal_status else '✗'}" for
-                       goal_name, goal_status in [(goal.name, goal.status) for goal in self._goals]]) +
-            "\n   Anti-Goals:\n" +
-            "\n".join([f"       - {goal_name}: {'✓' if goal_status else '✗'}" for
-                       goal_name, goal_status in [(goal.name, goal.status) for goal in self._anti_goals]]) +
-            "\n   Fatal Goals:\n" +
-            "\n".join([f"       - {goal_name}: {'✓' if goal_status else '✗'}" for
-                       goal_name, goal_status in [(goal.name, goal.status) for goal in self._fatal_goals]]) +
-            f"\n{'=' * 80}\n"
+            "Results:\n"
+            + "   Goals:\n"
+            + "\n".join(
+                [
+                    f"       - {goal_name}: {'✓' if goal_status else '✗'}"
+                    for goal_name, goal_status in [
+                        (goal.name, goal.status) for goal in self._goals
+                    ]
+                ]
+            )
+            + "\n   Anti-Goals:\n"
+            + "\n".join(
+                [
+                    f"       - {goal_name}: {'✓' if goal_status else '✗'}"
+                    for goal_name, goal_status in [
+                        (goal.name, goal.status) for goal in self._anti_goals
+                    ]
+                ]
+            )
+            + "\n   Fatal Goals:\n"
+            + "\n".join(
+                [
+                    f"       - {goal_name}: {'✓' if goal_status else '✗'}"
+                    for goal_name, goal_status in [
+                        (goal.name, goal.status) for goal in self._fatal_goals
+                    ]
+                ]
+            )
+            + f"\n{'=' * 80}\n"
             f"Final Score (goals - antigoals): {self.calc_score():.2f}\n"
             f"{'=' * 80}"
         )
@@ -375,10 +435,10 @@ class Scenario:
             "antigoal_weights": self._antigoal_weights,
             "execution": execution,
             "timestamp": self.get_current_ts(),
-            "elapsed_time": self.get_current_ts() - self._start_ts
+            "elapsed_time": self.get_current_ts() - self._start_ts,
         }
         event = EventMsg(type="scenario_started", data=msg_data)
-        self.log_info(f'Sending scenario started event')
+        self.log_info("Sending scenario started event")
         self._rtmonitor.send_event(event)
 
     def send_scenario_update(self, execution: str):
@@ -394,10 +454,10 @@ class Scenario:
             "antigoal_weights": self._antigoal_weights,
             "execution": execution,
             "timestamp": self.get_current_ts(),
-            "elapsed_time": self.get_current_ts() - self._start_ts
+            "elapsed_time": self.get_current_ts() - self._start_ts,
         }
         event = EventMsg(type="scenario_update", data=msg_data)
-        self.log_info('Sending scenario update event')
+        self.log_info("Sending scenario update event")
         self._rtmonitor.send_event(event)
 
     def send_scenario_finished(self, execution: str):
@@ -414,16 +474,15 @@ class Scenario:
             "antigoal_weights": self._antigoal_weights,
             "execution": execution,
             "timestamp": self.get_current_ts(),
-            "elapsed_time": self.get_current_ts() - self._start_ts
+            "elapsed_time": self.get_current_ts() - self._start_ts,
         }
         event = EventMsg(type="scenario_finished", data=msg_data)
-        self.log_info(f'Sending scenario finished event')
+        self.log_info("Sending scenario finished event")
         self._rtmonitor.send_event(event)
 
     def make_result_list(self):
         res_list = [(goal.name, goal.status) for goal in self._goals]
         return res_list
-
 
     @staticmethod
     def get_current_ts():
@@ -445,10 +504,19 @@ class Scenario:
         Returns:
             float: The calculated weighted score.
         """
-        goal_res = [goal.status * w for goal,w in zip(self._goals, self._goal_weights)] if \
-            len(self._goals) > 0 else [0]
-        antigoal_res = [goal.status * w for goal,w in zip(self._anti_goals, self._antigoal_weights)] if \
-            len(self._anti_goals) > 0 else [0]
+        goal_res = (
+            [goal.status * w for goal, w in zip(self._goals, self._goal_weights)]
+            if len(self._goals) > 0
+            else [0]
+        )
+        antigoal_res = (
+            [
+                goal.status * w
+                for goal, w in zip(self._anti_goals, self._antigoal_weights)
+            ]
+            if len(self._anti_goals) > 0
+            else [0]
+        )
         res = sum(goal_res) - sum(antigoal_res)
         return res
 

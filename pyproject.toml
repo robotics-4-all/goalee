@@ -1,0 +1,88 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "goalee"
+dynamic = ["version"]
+description = "Goal-driven runtime verification library for Cyber-Physical Systems"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    { name = "Konstantinos Panayiotou", email = "klpanagi@gmail.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "commlib-py>=0.13.1",
+    "pydantic>=2.0.0",
+    "rich>=13.4.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "build",
+    "ruff",
+    "twine",
+    "wheel",
+]
+test = [
+    "pytest>=7.0",
+    "coverage",
+]
+
+[project.urls]
+Homepage = "https://github.com/robotics-4-all/goalee"
+Repository = "https://github.com/robotics-4-all/goalee"
+Issues = "https://github.com/robotics-4-all/goalee/issues"
+
+[tool.setuptools.dynamic]
+version = { attr = "goalee.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["goalee*"]
+
+[tool.setuptools.package-data]
+goalee = ["py.typed"]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "W",    # pycodestyle warnings
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B006",   # mutable default argument (some intentional uses)
+    "B026",   # star-arg unpacking after keyword arg (existing pattern)
+    "SIM102", # nested if statements (readability preference)
+    "SIM108", # ternary operator (readability preference)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["goalee"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

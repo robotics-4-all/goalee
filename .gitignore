@@ -101,5 +101,11 @@ ENV/
 # mypy
 .mypy_cache/
 
+# Ruff
+.ruff_cache/
+
+# Build artifacts (modern)
+*.whl
+
 # IDE settings
 .vscode/

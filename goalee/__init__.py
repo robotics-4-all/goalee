@@ -4,7 +4,7 @@ from __future__ import annotations
 
 __author__ = """Konstantinos Panayiotou"""
 __email__ = "klpanagi@gmail.com"
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 from goalee.brokers import AMQPBroker as AMQPBroker
 from goalee.brokers import Broker as Broker

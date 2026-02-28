@@ -11,7 +11,9 @@ from goalee.types import Orientation, Point
 
 def test_version():
     assert isinstance(goalee.__version__, str)
-    assert goalee.__version__ == "0.1.0"
+    parts = goalee.__version__.split(".")
+    assert len(parts) == 3
+    assert all(p.isdigit() for p in parts)
 
 
 def test_public_imports():

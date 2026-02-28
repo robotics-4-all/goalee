@@ -66,3 +66,12 @@ dist: clean ## builds source and wheel package
 
 install: ## install the package in development mode
 	pip install -e ".[dev,test]"
+
+bump-patch: ## bump patch version (0.1.0 -> 0.1.1)
+	bump2version patch
+
+bump-minor: ## bump minor version (0.1.0 -> 0.2.0)
+	bump2version minor
+
+bump-major: ## bump major version (0.1.0 -> 1.0.0)
+	bump2version major

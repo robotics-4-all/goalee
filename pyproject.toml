@@ -36,6 +36,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "build",
+    "bump2version",
     "ruff",
     "twine",
     "wheel",
